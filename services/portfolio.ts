@@ -109,8 +109,11 @@ export function calcCurrentQuantity(tickerId: string): number {
 }
 
 export function calcPortfolioSummary(): PortfolioSummary {
-  const holdings = calcActiveHoldings()
-  const closed = calcClosedPositions()
+  const all = calcHoldings()
+  const holdings = all.filter((h) => h.quantity > 0)
+  const closed = all
+    .filter((h) => h.quantity === 0)
+    .map((h) => ({ tickerId: h.tickerId, realizedPnl: h.realizedPnl, totalFee: h.totalFee }))
 
   const totalCost = holdings.reduce((acc, h) => acc + h.totalCost, 0)
   const marketValue = holdings.some((h) => h.marketValue !== null)

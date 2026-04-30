@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPlanById } from '@/services/plan'
-import { getAllTransactions } from '@/services/transaction'
+import { getTransactionsByPlanId } from '@/services/transaction'
 import { PlanDetail } from '@/components/plans/PlanDetail'
 import { DailyEntryForm } from '@/components/plans/DailyEntryForm'
 import { recordDailyEntryAction } from './actions'
@@ -12,7 +12,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
   const plan = getPlanById(id)
   if (!plan) notFound()
 
-  const transactions = getAllTransactions().filter((tx) => tx.planId === id)
+  const transactions = getTransactionsByPlanId(id)
 
   return (
     <div className="p-6 max-w-3xl">

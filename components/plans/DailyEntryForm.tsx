@@ -25,7 +25,7 @@ export function DailyEntryForm({ planId, action }: Props) {
     }
   }, [state.success, router])
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Date().toLocaleDateString('en-CA')
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4">

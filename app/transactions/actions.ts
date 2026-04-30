@@ -32,6 +32,7 @@ export async function createTransactionAction(
   if (!tickerId) errors.tickerId = '티커를 선택하세요.'
   if (!type || (type !== 'buy' && type !== 'sell')) errors.type = '매수/매도를 선택하세요.'
   if (!date) errors.date = '날짜를 입력하세요.'
+  else if (isNaN(Date.parse(date))) errors.date = '올바른 날짜를 입력하세요.'
 
   const quantity = parseFloat(quantityStr)
   const price = parseFloat(priceStr)
@@ -73,6 +74,7 @@ export async function updateTransactionAction(
   const errors: TransactionFormState['errors'] = {}
   if (!type || (type !== 'buy' && type !== 'sell')) errors.type = '매수/매도를 선택하세요.'
   if (!date) errors.date = '날짜를 입력하세요.'
+  else if (isNaN(Date.parse(date))) errors.date = '올바른 날짜를 입력하세요.'
 
   const quantity = parseFloat(quantityStr)
   const price = parseFloat(priceStr)
@@ -84,6 +86,14 @@ export async function updateTransactionAction(
   else if (isNaN(price) || price <= 0) errors.price = '0보다 큰 값을 입력하세요.'
 
   if (Object.keys(errors).length > 0) return { errors }
+
+  if (type === 'sell') {
+    // Exclude the existing transaction's quantity from the baseline before comparing
+    const currentQty = calcCurrentQuantity(existing.tickerId)
+    const baselineQty =
+      existing.type === 'sell' ? currentQty + existing.quantity : currentQty - existing.quantity
+    if (quantity > baselineQty) return { errors: { sell: '보유 수량을 초과합니다.' } }
+  }
 
   updateTransaction(id, { type: type!, date, quantity, price, fee: isNaN(fee) ? 0 : fee })
   revalidatePath('/')

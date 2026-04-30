@@ -33,7 +33,7 @@ function calcPlanProgress(planId: string, totalAmount: number, dailyAmount: numb
   const completedDays = txRows.length
   const totalSpent = txRows.reduce((sum, r) => sum + r.quantity * r.price, 0)
   const totalBuyQty = txRows.reduce((sum, r) => sum + r.quantity, 0)
-  const remainingAmount = Math.max(0, totalAmount - completedDays * dailyAmount)
+  const remainingAmount = Math.max(0, totalAmount - totalSpent)
   const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
   const targetSellPrice = planAvgCost != null ? planAvgCost * 1.1 : null
 
@@ -41,14 +41,44 @@ function calcPlanProgress(planId: string, totalAmount: number, dailyAmount: numb
 }
 
 export function getAllPlans(): PlanWithProgress[] {
-  const rows = getDb()
+  const db = getDb()
+  const rows = db
     .prepare('SELECT * FROM plans ORDER BY created_at DESC')
     .all() as Parameters<typeof rowToPlan>[0][]
 
+  if (rows.length === 0) return []
+
+  const ids = rows.map((r) => r.id)
+  const placeholders = ids.map(() => '?').join(',')
+  const txAgg = db
+    .prepare(
+      `SELECT plan_id,
+              COUNT(*) AS completed_days,
+              SUM(quantity * price) AS total_spent,
+              SUM(quantity) AS total_buy_qty
+       FROM transactions
+       WHERE type = 'buy' AND plan_id IN (${placeholders})
+       GROUP BY plan_id`
+    )
+    .all(...ids) as {
+    plan_id: string
+    completed_days: number
+    total_spent: number
+    total_buy_qty: number
+  }[]
+
+  const aggMap = new Map(txAgg.map((r) => [r.plan_id, r]))
+
   return rows.map((row) => {
     const plan = rowToPlan(row)
-    const progress = calcPlanProgress(plan.id, plan.totalAmount, plan.dailyAmount)
-    return { ...plan, ...progress }
+    const agg = aggMap.get(plan.id)
+    const completedDays = agg?.completed_days ?? 0
+    const totalSpent = agg?.total_spent ?? 0
+    const totalBuyQty = agg?.total_buy_qty ?? 0
+    const remainingAmount = Math.max(0, plan.totalAmount - totalSpent)
+    const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
+    const targetSellPrice = planAvgCost != null ? planAvgCost * 1.1 : null
+    return { ...plan, completedDays, remainingAmount, planAvgCost, targetSellPrice }
   })
 }
 

@@ -14,6 +14,8 @@ export async function addTickerAction(
   const id = (formData.get('id') as string | null)?.toUpperCase().trim() ?? ''
 
   if (!id) return { error: '티커를 입력하세요.' }
+  if (id.length > 10 || !/^[A-Z0-9.\-^]+$/.test(id))
+    return { error: '유효하지 않은 티커 형식입니다.' }
   if (tickerExists(id)) return { error: '이미 등록된 티커입니다.' }
 
   addTicker(id)

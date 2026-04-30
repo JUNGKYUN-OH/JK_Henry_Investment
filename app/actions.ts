@@ -2,12 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { upsertManualPrice } from '@/services/price'
+import { tickerExists } from '@/services/ticker'
 
 export async function saveManualPricesAction(
   entries: { tickerId: string; price: number }[]
 ): Promise<void> {
   for (const { tickerId, price } of entries) {
-    if (price > 0) upsertManualPrice(tickerId, price)
+    if (price > 0 && tickerExists(tickerId)) upsertManualPrice(tickerId, price)
   }
   revalidatePath('/')
 }

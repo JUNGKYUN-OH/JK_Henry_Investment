@@ -69,6 +69,15 @@ describe('recordDailyEntry', () => {
     expect(updated.targetSellPrice).toBeCloseTo(121, 5)
   })
 
+  it('remainingAmount reflects actual spend, not target days (C2 fix)', () => {
+    const plan = createPlan('AAPL', 4000)
+    // Day 1: spend $95 instead of $100 target (10 qty @ $9.50)
+    recordDailyEntry(plan.id, { date: '2024-01-01', quantity: 10, price: 9.5, fee: 0 })
+    const updated = getPlanById(plan.id)!
+    // totalSpent = 10 * 9.50 = $95, remainingAmount should be $3905, not $3900
+    expect(updated.remainingAmount).toBeCloseTo(3905, 2)
+  })
+
   it('rejects duplicate date entry', () => {
     const plan = createPlan('AAPL', 4000)
     recordDailyEntry(plan.id, { date: '2024-01-01', quantity: 10, price: 100, fee: 0 })

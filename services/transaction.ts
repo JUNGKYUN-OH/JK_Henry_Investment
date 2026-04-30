@@ -25,6 +25,16 @@ function rowToTransaction(row: {
   }
 }
 
+export function getTransactionsByPlanId(planId: string): Transaction[] {
+  return (
+    getDb()
+      .prepare(
+        'SELECT * FROM transactions WHERE plan_id = ? ORDER BY date DESC, created_at DESC'
+      )
+      .all(planId) as Parameters<typeof rowToTransaction>[0][]
+  ).map(rowToTransaction)
+}
+
 export function getAllTransactions(tickerId?: string): Transaction[] {
   const db = getDb()
   if (tickerId) {

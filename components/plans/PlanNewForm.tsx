@@ -4,6 +4,14 @@ import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { createPlanAction } from '@/app/plans/actions'
 import type { Ticker } from '@/types'
 
@@ -26,19 +34,20 @@ export function PlanNewForm({ tickers, action }: Props) {
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="tickerId">종목</FieldLabel>
-          <select
-            id="tickerId"
-            name="tickerId"
-            required
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="">선택...</option>
-            {tickers.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.id}
-              </option>
-            ))}
-          </select>
+          <Select name="tickerId">
+            <SelectTrigger id="tickerId">
+              <SelectValue placeholder="종목 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {tickers.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.id}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </Field>
 
         <Field>
