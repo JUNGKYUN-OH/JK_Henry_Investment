@@ -1,5 +1,5 @@
 import { calcActiveHoldings } from '@/services/portfolio'
-import { formatUSD, formatPct } from '@/lib/format'
+import { formatUSD, formatPct, formatQty } from '@/lib/format'
 
 export function HoldingsTable() {
   const holdings = calcActiveHoldings()
@@ -29,7 +29,7 @@ export function HoldingsTable() {
           {holdings.map((h) => (
             <tr key={h.tickerId} className="border-b last:border-0">
               <td className="py-3 pr-4 font-mono font-medium">{h.tickerId}</td>
-              <td className="py-3 pr-4 text-right tabular-nums">{h.quantity}</td>
+              <td className="py-3 pr-4 text-right tabular-nums">{formatQty(h.quantity)}</td>
               <td className="py-3 pr-4 text-right tabular-nums">{formatUSD(h.avgCost)}</td>
               <td className="py-3 pr-4 text-right tabular-nums">{formatUSD(h.totalCost)}</td>
               <td className="py-3 pr-4 text-right tabular-nums text-muted-foreground">

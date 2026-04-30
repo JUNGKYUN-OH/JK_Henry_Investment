@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { formatUSD, formatDate } from '@/lib/format'
+import { formatUSD, formatQty, formatDate } from '@/lib/format'
 import type { Transaction } from '@/types'
 
 interface Props {
@@ -66,7 +66,7 @@ export function TransactionList({ transactions, deleteAction }: Props) {
                     {tx.type === 'buy' ? '매수' : '매도'}
                   </span>
                 </td>
-                <td className="py-3 pr-4 text-right tabular-nums">{tx.quantity}</td>
+                <td className="py-3 pr-4 text-right tabular-nums">{formatQty(tx.quantity)}</td>
                 <td className="py-3 pr-4 text-right tabular-nums">{formatUSD(tx.price)}</td>
                 <td className="py-3 pr-4 text-right tabular-nums text-muted-foreground">
                   {tx.fee > 0 ? formatUSD(tx.fee) : '—'}
@@ -102,7 +102,7 @@ export function TransactionList({ transactions, deleteAction }: Props) {
             <AlertDialogTitle>거래 삭제</AlertDialogTitle>
             <AlertDialogDescription>
               {txToDelete &&
-                `${txToDelete.tickerId} ${txToDelete.type === 'buy' ? '매수' : '매도'} ${txToDelete.quantity}주 @ ${formatUSD(txToDelete.price)} 거래를 삭제합니다. 이 작업은 되돌릴 수 없습니다.`}
+                `${txToDelete.tickerId} ${txToDelete.type === 'buy' ? '매수' : '매도'} ${formatQty(txToDelete.quantity)}주 @ ${formatUSD(txToDelete.price)} 거래를 삭제합니다. 이 작업은 되돌릴 수 없습니다.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

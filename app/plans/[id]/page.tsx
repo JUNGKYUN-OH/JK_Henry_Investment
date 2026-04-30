@@ -5,7 +5,7 @@ import { getTransactionsByPlanId } from '@/services/transaction'
 import { PlanDetail } from '@/components/plans/PlanDetail'
 import { DailyEntryForm } from '@/components/plans/DailyEntryForm'
 import { recordDailyEntryAction } from './actions'
-import { formatUSD } from '@/lib/format'
+import { formatUSD, formatQty } from '@/lib/format'
 
 export default async function PlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -52,7 +52,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
                   .map((tx) => (
                     <tr key={tx.id} className="border-b last:border-0">
                       <td className="px-4 py-2 tabular-nums">{tx.date}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{tx.quantity}</td>
+                      <td className="px-4 py-2 text-right tabular-nums">{formatQty(tx.quantity)}</td>
                       <td className="px-4 py-2 text-right tabular-nums">{formatUSD(tx.price)}</td>
                       <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">
                         {formatUSD(tx.fee)}
