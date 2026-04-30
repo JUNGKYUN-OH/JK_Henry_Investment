@@ -45,6 +45,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# SQLite database
+*.db
+*.db-shm
+*.db-wal
+
 # claude local settings
 .claude/settings.local.json
 
