@@ -2,8 +2,8 @@ import { getAllTickers } from '@/services/ticker'
 import { PlanNewForm } from '@/components/plans/PlanNewForm'
 import { createPlanAction } from '../actions'
 
-export default function PlanNewPage() {
-  const tickers = getAllTickers()
+export default async function PlanNewPage() {
+  const tickers = await getAllTickers()
 
   return (
     <div className="p-6 max-w-sm">

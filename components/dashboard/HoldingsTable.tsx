@@ -1,8 +1,8 @@
 import { calcActiveHoldings } from '@/services/portfolio'
 import { formatUSD, formatPct, formatQty } from '@/lib/format'
 
-export function HoldingsTable() {
-  const holdings = calcActiveHoldings()
+export async function HoldingsTable() {
+  const holdings = await calcActiveHoldings()
 
   if (holdings.length === 0) {
     return (

@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button'
 import { PlanList } from '@/components/plans/PlanList'
 import { getAllPlans } from '@/services/plan'
 
-export default function PlansPage() {
-  const plans = getAllPlans()
+export default async function PlansPage() {
+  const plans = await getAllPlans()
 
   return (
     <div className="p-6 max-w-3xl">

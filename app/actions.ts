@@ -8,7 +8,7 @@ export async function saveManualPricesAction(
   entries: { tickerId: string; price: number }[]
 ): Promise<void> {
   for (const { tickerId, price } of entries) {
-    if (price > 0 && tickerExists(tickerId)) upsertManualPrice(tickerId, price)
+    if (price > 0 && (await tickerExists(tickerId))) await upsertManualPrice(tickerId, price)
   }
   revalidatePath('/')
 }

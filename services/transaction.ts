@@ -25,38 +25,35 @@ function rowToTransaction(row: {
   }
 }
 
-export function getTransactionsByPlanId(planId: string): Transaction[] {
-  return (
-    getDb()
-      .prepare(
-        'SELECT * FROM transactions WHERE plan_id = ? ORDER BY date DESC, created_at DESC'
-      )
-      .all(planId) as Parameters<typeof rowToTransaction>[0][]
-  ).map(rowToTransaction)
+export async function getTransactionsByPlanId(planId: string): Promise<Transaction[]> {
+  const { rows } = await getDb().execute({
+    sql: 'SELECT * FROM transactions WHERE plan_id = ? ORDER BY date DESC, created_at DESC',
+    args: [planId],
+  })
+  return (rows as unknown as Parameters<typeof rowToTransaction>[0][]).map(rowToTransaction)
 }
 
-export function getAllTransactions(tickerId?: string): Transaction[] {
+export async function getAllTransactions(tickerId?: string): Promise<Transaction[]> {
   const db = getDb()
   if (tickerId) {
-    return (
-      db
-        .prepare(
-          'SELECT * FROM transactions WHERE ticker_id = ? ORDER BY date DESC, created_at DESC'
-        )
-        .all(tickerId) as Parameters<typeof rowToTransaction>[0][]
-    ).map(rowToTransaction)
+    const { rows } = await db.execute({
+      sql: 'SELECT * FROM transactions WHERE ticker_id = ? ORDER BY date DESC, created_at DESC',
+      args: [tickerId],
+    })
+    return (rows as unknown as Parameters<typeof rowToTransaction>[0][]).map(rowToTransaction)
   }
-  return (
-    db
-      .prepare('SELECT * FROM transactions ORDER BY date DESC, created_at DESC')
-      .all() as Parameters<typeof rowToTransaction>[0][]
-  ).map(rowToTransaction)
+  const { rows } = await db.execute(
+    'SELECT * FROM transactions ORDER BY date DESC, created_at DESC'
+  )
+  return (rows as unknown as Parameters<typeof rowToTransaction>[0][]).map(rowToTransaction)
 }
 
-export function getTransactionById(id: string): Transaction | null {
-  const row = getDb()
-    .prepare('SELECT * FROM transactions WHERE id = ?')
-    .get(id) as Parameters<typeof rowToTransaction>[0] | undefined
+export async function getTransactionById(id: string): Promise<Transaction | null> {
+  const { rows } = await getDb().execute({
+    sql: 'SELECT * FROM transactions WHERE id = ?',
+    args: [id],
+  })
+  const row = rows[0] as unknown as Parameters<typeof rowToTransaction>[0] | undefined
   return row ? rowToTransaction(row) : null
 }
 
@@ -70,21 +67,20 @@ export interface CreateTransactionData {
   planId?: string
 }
 
-export function createTransaction(data: CreateTransactionData): Transaction {
+export async function createTransaction(data: CreateTransactionData): Promise<Transaction> {
   const id = crypto.randomUUID()
-  getDb()
-    .prepare(
-      `INSERT INTO transactions (id, ticker_id, type, date, quantity, price, fee, plan_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(id, data.tickerId, data.type, data.date, data.quantity, data.price, data.fee, data.planId ?? null)
-  return getTransactionById(id)!
+  await getDb().execute({
+    sql: `INSERT INTO transactions (id, ticker_id, type, date, quantity, price, fee, plan_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.tickerId, data.type, data.date, data.quantity, data.price, data.fee, data.planId ?? null],
+  })
+  return (await getTransactionById(id))!
 }
 
-export function updateTransaction(
+export async function updateTransaction(
   id: string,
   data: Partial<Omit<CreateTransactionData, 'tickerId' | 'planId'>>
-): void {
+): Promise<void> {
   const fields: string[] = []
   const values: (string | number)[] = []
   if (data.type !== undefined) { fields.push('type = ?'); values.push(data.type) }
@@ -94,11 +90,15 @@ export function updateTransaction(
   if (data.fee !== undefined) { fields.push('fee = ?'); values.push(data.fee) }
   if (fields.length === 0) return
   values.push(id)
-  getDb()
-    .prepare(`UPDATE transactions SET ${fields.join(', ')} WHERE id = ?`)
-    .run(...values)
+  await getDb().execute({
+    sql: `UPDATE transactions SET ${fields.join(', ')} WHERE id = ?`,
+    args: values,
+  })
 }
 
-export function deleteTransaction(id: string): void {
-  getDb().prepare('DELETE FROM transactions WHERE id = ?').run(id)
+export async function deleteTransaction(id: string): Promise<void> {
+  await getDb().execute({
+    sql: 'DELETE FROM transactions WHERE id = ?',
+    args: [id],
+  })
 }

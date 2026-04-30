@@ -7,10 +7,10 @@ import { getCachedPrices } from '@/services/price'
 import { saveManualPricesAction } from '@/app/actions'
 import { formatUSD } from '@/lib/format'
 
-export default function DashboardPage() {
-  const summary = calcPortfolioSummary()
-  const holdings = calcActiveHoldings()
-  const priceCache = getCachedPrices()
+export default async function DashboardPage() {
+  const summary = await calcPortfolioSummary()
+  const holdings = await calcActiveHoldings()
+  const priceCache = await getCachedPrices()
 
   const lastFetchedAt =
     priceCache.size > 0

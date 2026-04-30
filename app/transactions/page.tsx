@@ -7,17 +7,17 @@ import { TransactionForm } from '@/components/transactions/TransactionForm'
 import { TransactionList } from '@/components/transactions/TransactionList'
 import { createTransactionAction, deleteTransactionAction } from './actions'
 
-export default function TransactionsPage() {
-  const tickers = getAllTickersWithCounts()
-  const transactions = getAllTransactions()
+export default async function TransactionsPage() {
+  const tickers = await getAllTickersWithCounts()
+  const transactions = await getAllTransactions()
 
-  const activePlans = getAllPlans().filter((p) => p.status === 'active')
+  const activePlans = (await getAllPlans()).filter((p) => p.status === 'active')
   const planMap: Record<string, { completedDays: number; dailyAmount: number }> = {}
   for (const p of activePlans) {
     planMap[p.tickerId] = { completedDays: p.completedDays, dailyAmount: p.dailyAmount }
   }
 
-  const priceCache = getCachedPrices()
+  const priceCache = await getCachedPrices()
   const priceMap: Record<string, number> = {}
   for (const [tickerId, { price }] of priceCache.entries()) {
     priceMap[tickerId] = price

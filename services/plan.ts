@@ -22,22 +22,23 @@ function rowToPlan(row: {
   }
 }
 
-function calcPlanProgress(planId: string, tickerId: string, totalAmount: number) {
+async function calcPlanProgress(planId: string, tickerId: string, totalAmount: number) {
   const db = getDb()
 
-  // 진행일수: 계획에 연결된 매수만 (40일 완료 추적용)
-  const { cnt } = db
-    .prepare(`SELECT COUNT(*) AS cnt FROM transactions WHERE plan_id = ? AND type = 'buy'`)
-    .get(planId) as { cnt: number }
-  const completedDays = cnt
+  const { rows: cntRows } = await db.execute({
+    sql: `SELECT COUNT(*) AS cnt FROM transactions WHERE plan_id = ? AND type = 'buy'`,
+    args: [planId],
+  })
+  const completedDays = Number((cntRows[0] as unknown as { cnt: number | bigint }).cnt)
 
-  // 잔여금액·평균단가·목표매도가: 해당 티커 전체 매수 기준
-  const allRows = db
-    .prepare(`SELECT quantity, price FROM transactions WHERE ticker_id = ? AND type = 'buy'`)
-    .all(tickerId) as { quantity: number; price: number }[]
+  const { rows: allRows } = await db.execute({
+    sql: `SELECT quantity, price FROM transactions WHERE ticker_id = ? AND type = 'buy'`,
+    args: [tickerId],
+  })
+  const buyRows = allRows as unknown as { quantity: number; price: number }[]
 
-  const totalSpent = allRows.reduce((sum, r) => sum + r.quantity * r.price, 0)
-  const totalBuyQty = allRows.reduce((sum, r) => sum + r.quantity, 0)
+  const totalSpent = buyRows.reduce((sum, r) => sum + r.quantity * r.price, 0)
+  const totalBuyQty = buyRows.reduce((sum, r) => sum + r.quantity, 0)
   const remainingAmount = Math.max(0, totalAmount - totalSpent)
   const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
   const targetSellPrice = planAvgCost != null ? planAvgCost * 1.1 : null
@@ -45,44 +46,52 @@ function calcPlanProgress(planId: string, tickerId: string, totalAmount: number)
   return { completedDays, remainingAmount, planAvgCost, targetSellPrice }
 }
 
-export function getAllPlans(): PlanWithProgress[] {
+export async function getAllPlans(): Promise<PlanWithProgress[]> {
   const db = getDb()
-  const rows = db
-    .prepare('SELECT * FROM plans ORDER BY created_at DESC')
-    .all() as Parameters<typeof rowToPlan>[0][]
+  const { rows } = await db.execute('SELECT * FROM plans ORDER BY created_at DESC')
+  const planRows = rows as unknown as Parameters<typeof rowToPlan>[0][]
 
-  if (rows.length === 0) return []
+  if (planRows.length === 0) return []
 
-  const planIds = rows.map((r) => r.id)
-  const tickerIds = [...new Set(rows.map((r) => r.ticker_id))]
+  const planIds = planRows.map((r) => r.id)
+  const tickerIds = [...new Set(planRows.map((r) => r.ticker_id))]
 
-  // 진행일수: 계획에 연결된 매수만
   const dayPlaceholders = planIds.map(() => '?').join(',')
-  const dayAgg = db
-    .prepare(
-      `SELECT plan_id, COUNT(*) AS completed_days
-       FROM transactions
-       WHERE type = 'buy' AND plan_id IN (${dayPlaceholders})
-       GROUP BY plan_id`
-    )
-    .all(...planIds) as { plan_id: string; completed_days: number }[]
-  const dayMap = new Map(dayAgg.map((r) => [r.plan_id, r.completed_days]))
+  const { rows: dayAggRows } = await db.execute({
+    sql: `SELECT plan_id, COUNT(*) AS completed_days
+          FROM transactions
+          WHERE type = 'buy' AND plan_id IN (${dayPlaceholders})
+          GROUP BY plan_id`,
+    args: planIds,
+  })
+  const dayMap = new Map(
+    (dayAggRows as unknown as { plan_id: string; completed_days: number | bigint }[]).map((r) => [
+      r.plan_id,
+      Number(r.completed_days),
+    ])
+  )
 
-  // 잔여금액·평균단가·목표매도가: 해당 티커 전체 매수 기준
   const tickerPlaceholders = tickerIds.map(() => '?').join(',')
-  const tickerAgg = db
-    .prepare(
-      `SELECT ticker_id,
-              SUM(quantity * price) AS total_spent,
-              SUM(quantity) AS total_buy_qty
-       FROM transactions
-       WHERE type = 'buy' AND ticker_id IN (${tickerPlaceholders})
-       GROUP BY ticker_id`
-    )
-    .all(...tickerIds) as { ticker_id: string; total_spent: number; total_buy_qty: number }[]
-  const tickerMap = new Map(tickerAgg.map((r) => [r.ticker_id, r]))
+  const { rows: tickerAggRows } = await db.execute({
+    sql: `SELECT ticker_id,
+                 SUM(quantity * price) AS total_spent,
+                 SUM(quantity) AS total_buy_qty
+          FROM transactions
+          WHERE type = 'buy' AND ticker_id IN (${tickerPlaceholders})
+          GROUP BY ticker_id`,
+    args: tickerIds,
+  })
+  const tickerMap = new Map(
+    (
+      tickerAggRows as unknown as {
+        ticker_id: string
+        total_spent: number
+        total_buy_qty: number
+      }[]
+    ).map((r) => [r.ticker_id, r])
+  )
 
-  return rows.map((row) => {
+  return planRows.map((row) => {
     const plan = rowToPlan(row)
     const completedDays = dayMap.get(plan.id) ?? 0
     const ta = tickerMap.get(plan.tickerId)
@@ -95,46 +104,54 @@ export function getAllPlans(): PlanWithProgress[] {
   })
 }
 
-export function getPlanById(id: string): PlanWithProgress | null {
-  const row = getDb()
-    .prepare('SELECT * FROM plans WHERE id = ?')
-    .get(id) as Parameters<typeof rowToPlan>[0] | undefined
+export async function getPlanById(id: string): Promise<PlanWithProgress | null> {
+  const { rows } = await getDb().execute({
+    sql: 'SELECT * FROM plans WHERE id = ?',
+    args: [id],
+  })
+  const row = rows[0] as unknown as Parameters<typeof rowToPlan>[0] | undefined
   if (!row) return null
   const plan = rowToPlan(row)
-  return { ...plan, ...calcPlanProgress(plan.id, plan.tickerId, plan.totalAmount) }
+  return { ...plan, ...(await calcPlanProgress(plan.id, plan.tickerId, plan.totalAmount)) }
 }
 
-export function getActivePlanByTicker(tickerId: string): Plan | null {
-  const row = getDb()
-    .prepare(`SELECT * FROM plans WHERE ticker_id = ? AND status = 'active' LIMIT 1`)
-    .get(tickerId) as Parameters<typeof rowToPlan>[0] | undefined
+export async function getActivePlanByTicker(tickerId: string): Promise<Plan | null> {
+  const { rows } = await getDb().execute({
+    sql: `SELECT * FROM plans WHERE ticker_id = ? AND status = 'active' LIMIT 1`,
+    args: [tickerId],
+  })
+  const row = rows[0] as unknown as Parameters<typeof rowToPlan>[0] | undefined
   return row ? rowToPlan(row) : null
 }
 
-export function createPlan(tickerId: string, totalAmount: number): Plan {
-  const existing = getActivePlanByTicker(tickerId)
+export async function createPlan(tickerId: string, totalAmount: number): Promise<Plan> {
+  const existing = await getActivePlanByTicker(tickerId)
   if (existing) throw new Error(`Active plan already exists for ${tickerId}`)
 
   const id = crypto.randomUUID()
   const dailyAmount = totalAmount / 40
   const startDate = new Date().toISOString().slice(0, 10)
-  getDb()
-    .prepare(
-      `INSERT INTO plans (id, ticker_id, total_amount, daily_amount, status, start_date)
-       VALUES (?, ?, ?, ?, 'active', ?)`
-    )
-    .run(id, tickerId, totalAmount, dailyAmount, startDate)
-  return getPlanById(id)! as Plan
+  await getDb().execute({
+    sql: `INSERT INTO plans (id, ticker_id, total_amount, daily_amount, status, start_date)
+          VALUES (?, ?, ?, ?, 'active', ?)`,
+    args: [id, tickerId, totalAmount, dailyAmount, startDate],
+  })
+  return (await getPlanById(id))! as Plan
 }
 
-export function completePlan(id: string): void {
-  getDb().prepare(`UPDATE plans SET status = 'completed' WHERE id = ?`).run(id)
+export async function completePlan(id: string): Promise<void> {
+  await getDb().execute({
+    sql: `UPDATE plans SET status = 'completed' WHERE id = ?`,
+    args: [id],
+  })
 }
 
-export function isDuplicateDate(planId: string, date: string): boolean {
-  return !!getDb()
-    .prepare(`SELECT 1 FROM transactions WHERE plan_id = ? AND date = ? LIMIT 1`)
-    .get(planId, date)
+export async function isDuplicateDate(planId: string, date: string): Promise<boolean> {
+  const { rows } = await getDb().execute({
+    sql: `SELECT 1 FROM transactions WHERE plan_id = ? AND date = ? LIMIT 1`,
+    args: [planId, date],
+  })
+  return rows.length > 0
 }
 
 export interface DailyEntryData {
@@ -144,12 +161,12 @@ export interface DailyEntryData {
   fee: number
 }
 
-export function recordDailyEntry(planId: string, data: DailyEntryData): void {
-  const plan = getPlanById(planId)
+export async function recordDailyEntry(planId: string, data: DailyEntryData): Promise<void> {
+  const plan = await getPlanById(planId)
   if (!plan || plan.status !== 'active') throw new Error('Plan not found or not active')
-  if (isDuplicateDate(planId, data.date)) throw new Error('Entry already exists for this date')
+  if (await isDuplicateDate(planId, data.date)) throw new Error('Entry already exists for this date')
 
-  createTransaction({
+  await createTransaction({
     tickerId: plan.tickerId,
     type: 'buy',
     date: data.date,
@@ -159,8 +176,8 @@ export function recordDailyEntry(planId: string, data: DailyEntryData): void {
     planId,
   })
 
-  const updatedPlan = getPlanById(planId)!
+  const updatedPlan = (await getPlanById(planId))!
   if (updatedPlan.completedDays >= 40) {
-    completePlan(planId)
+    await completePlan(planId)
   }
 }

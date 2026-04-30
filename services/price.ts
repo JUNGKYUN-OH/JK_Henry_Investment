@@ -24,20 +24,21 @@ export async function fetchAndCachePrices(
         const price = (quote as { regularMarketPrice?: number }).regularMarketPrice ?? null
         if (price == null) throw new Error('No price data')
 
-        getDb()
-          .prepare(
-            `INSERT INTO price_cache (ticker_id, price, fetched_at)
-             VALUES (?, ?, ?)
-             ON CONFLICT(ticker_id) DO UPDATE SET price = excluded.price, fetched_at = excluded.fetched_at`
-          )
-          .run(tickerId, price, new Date().toISOString())
+        await getDb().execute({
+          sql: `INSERT INTO price_cache (ticker_id, price, fetched_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(ticker_id) DO UPDATE SET price = excluded.price, fetched_at = excluded.fetched_at`,
+          args: [tickerId, price, new Date().toISOString()],
+        })
 
         results.push({ tickerId, price })
       } catch (err) {
         anyError = true
-        const existing = getDb()
-          .prepare('SELECT price FROM price_cache WHERE ticker_id = ?')
-          .get(tickerId) as { price: number } | undefined
+        const { rows } = await getDb().execute({
+          sql: 'SELECT price FROM price_cache WHERE ticker_id = ?',
+          args: [tickerId],
+        })
+        const existing = rows[0] as unknown as { price: number } | undefined
         results.push({
           tickerId,
           price: existing?.price ?? null,
@@ -50,19 +51,23 @@ export async function fetchAndCachePrices(
   return { results, anyError }
 }
 
-export function getCachedPrices(): Map<string, { price: number; fetchedAt: string }> {
-  const rows = getDb()
-    .prepare('SELECT ticker_id, price, fetched_at FROM price_cache')
-    .all() as { ticker_id: string; price: number; fetched_at: string }[]
-  return new Map(rows.map((r) => [r.ticker_id, { price: r.price, fetchedAt: r.fetched_at }]))
+export async function getCachedPrices(): Promise<Map<string, { price: number; fetchedAt: string }>> {
+  const { rows } = await getDb().execute(
+    'SELECT ticker_id, price, fetched_at FROM price_cache'
+  )
+  return new Map(
+    (rows as unknown as { ticker_id: string; price: number; fetched_at: string }[]).map((r) => [
+      r.ticker_id,
+      { price: r.price, fetchedAt: r.fetched_at },
+    ])
+  )
 }
 
-export function upsertManualPrice(tickerId: string, price: number): void {
-  getDb()
-    .prepare(
-      `INSERT INTO price_cache (ticker_id, price, fetched_at)
-       VALUES (?, ?, ?)
-       ON CONFLICT(ticker_id) DO UPDATE SET price = excluded.price, fetched_at = excluded.fetched_at`
-    )
-    .run(tickerId, price, new Date().toISOString())
+export async function upsertManualPrice(tickerId: string, price: number): Promise<void> {
+  await getDb().execute({
+    sql: `INSERT INTO price_cache (ticker_id, price, fetched_at)
+          VALUES (?, ?, ?)
+          ON CONFLICT(ticker_id) DO UPDATE SET price = excluded.price, fetched_at = excluded.fetched_at`,
+    args: [tickerId, price, new Date().toISOString()],
+  })
 }

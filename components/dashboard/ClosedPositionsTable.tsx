@@ -1,8 +1,8 @@
 import { calcClosedPositions } from '@/services/portfolio'
 import { formatUSD } from '@/lib/format'
 
-export function ClosedPositionsTable() {
-  const closed = calcClosedPositions()
+export async function ClosedPositionsTable() {
+  const closed = await calcClosedPositions()
 
   if (closed.length === 0) return null
 

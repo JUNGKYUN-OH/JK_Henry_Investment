@@ -1,20 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import Database from 'better-sqlite3'
+import { createClient } from '@libsql/client'
 import { setDb, initSchema } from '@/lib/db'
 import { addTicker } from './ticker'
 import { createTransaction, getAllTransactions, getTransactionById } from './transaction'
 
-beforeEach(() => {
-  const db = new Database(':memory:')
-  db.pragma('foreign_keys = ON')
-  initSchema(db)
+beforeEach(async () => {
+  const db = createClient({ url: ':memory:' })
+  await initSchema(db)
   setDb(db)
-  addTicker('SPY')
+  await addTicker('SPY')
 })
 
 describe('createTransaction', () => {
-  it('creates a buy transaction and returns it', () => {
-    const tx = createTransaction({
+  it('creates a buy transaction and returns it', async () => {
+    const tx = await createTransaction({
       tickerId: 'SPY',
       type: 'buy',
       date: '2024-01-15',
@@ -30,8 +29,8 @@ describe('createTransaction', () => {
     expect(tx.planId).toBeNull()
   })
 
-  it('assigns a uuid id', () => {
-    const tx = createTransaction({
+  it('assigns a uuid id', async () => {
+    const tx = await createTransaction({
       tickerId: 'SPY',
       type: 'buy',
       date: '2024-01-15',
@@ -44,30 +43,30 @@ describe('createTransaction', () => {
 })
 
 describe('getAllTransactions', () => {
-  it('returns all transactions ordered by date desc', () => {
-    createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-10', quantity: 5, price: 440, fee: 0 })
-    createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 2.5 })
-    const txs = getAllTransactions()
+  it('returns all transactions ordered by date desc', async () => {
+    await createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-10', quantity: 5, price: 440, fee: 0 })
+    await createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 2.5 })
+    const txs = await getAllTransactions()
     expect(txs).toHaveLength(2)
     expect(txs[0].date).toBe('2024-01-15')
   })
 
-  it('filters by tickerId', () => {
-    addTicker('QQQ')
-    createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 0 })
-    createTransaction({ tickerId: 'QQQ', type: 'buy', date: '2024-01-15', quantity: 5, price: 400, fee: 0 })
-    expect(getAllTransactions('SPY')).toHaveLength(1)
-    expect(getAllTransactions('QQQ')).toHaveLength(1)
+  it('filters by tickerId', async () => {
+    await addTicker('QQQ')
+    await createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 0 })
+    await createTransaction({ tickerId: 'QQQ', type: 'buy', date: '2024-01-15', quantity: 5, price: 400, fee: 0 })
+    expect(await getAllTransactions('SPY')).toHaveLength(1)
+    expect(await getAllTransactions('QQQ')).toHaveLength(1)
   })
 })
 
 describe('getTransactionById', () => {
-  it('returns null for unknown id', () => {
-    expect(getTransactionById('nonexistent')).toBeNull()
+  it('returns null for unknown id', async () => {
+    expect(await getTransactionById('nonexistent')).toBeNull()
   })
 
-  it('returns the transaction after creation', () => {
-    const tx = createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 0 })
-    expect(getTransactionById(tx.id)).toEqual(tx)
+  it('returns the transaction after creation', async () => {
+    const tx = await createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 0 })
+    expect(await getTransactionById(tx.id)).toEqual(tx)
   })
 })

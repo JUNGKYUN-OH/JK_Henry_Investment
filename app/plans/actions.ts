@@ -20,7 +20,7 @@ export async function createPlanAction(
   if (isNaN(totalAmount) || totalAmount <= 0) return { error: '총 투자금액을 입력하세요.' }
 
   try {
-    createPlan(tickerId, totalAmount)
+    await createPlan(tickerId, totalAmount)
   } catch (err) {
     return { error: err instanceof Error ? err.message : '계획 생성 실패' }
   }

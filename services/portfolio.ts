@@ -18,34 +18,32 @@ interface FeeRow {
   total_fee: number
 }
 
-export function calcHoldings(): Holding[] {
+export async function calcHoldings(): Promise<Holding[]> {
   const db = getDb()
 
-  const buyRows = db
-    .prepare(
-      `SELECT ticker_id, SUM(quantity) as total_buy_qty, SUM(quantity * price) as total_buy_amount
-       FROM transactions WHERE type = 'buy'
-       GROUP BY ticker_id`
-    )
-    .all() as BuyRow[]
+  const { rows: buyRaw } = await db.execute(
+    `SELECT ticker_id, SUM(quantity) as total_buy_qty, SUM(quantity * price) as total_buy_amount
+     FROM transactions WHERE type = 'buy'
+     GROUP BY ticker_id`
+  )
+  const buyRows = buyRaw as unknown as BuyRow[]
 
-  const sellRows = db
-    .prepare(
-      `SELECT ticker_id, SUM(quantity) as total_sell_qty, SUM(quantity * price) as total_sell_amount
-       FROM transactions WHERE type = 'sell'
-       GROUP BY ticker_id`
-    )
-    .all() as SellRow[]
+  const { rows: sellRaw } = await db.execute(
+    `SELECT ticker_id, SUM(quantity) as total_sell_qty, SUM(quantity * price) as total_sell_amount
+     FROM transactions WHERE type = 'sell'
+     GROUP BY ticker_id`
+  )
+  const sellRows = sellRaw as unknown as SellRow[]
 
-  const feeRows = db
-    .prepare(
-      `SELECT ticker_id, SUM(fee) as total_fee FROM transactions GROUP BY ticker_id`
-    )
-    .all() as FeeRow[]
+  const { rows: feeRaw } = await db.execute(
+    `SELECT ticker_id, SUM(fee) as total_fee FROM transactions GROUP BY ticker_id`
+  )
+  const feeRows = feeRaw as unknown as FeeRow[]
 
-  const priceRows = db
-    .prepare('SELECT ticker_id, price FROM price_cache')
-    .all() as { ticker_id: string; price: number }[]
+  const { rows: priceRaw } = await db.execute(
+    'SELECT ticker_id, price FROM price_cache'
+  )
+  const priceRows = priceRaw as unknown as { ticker_id: string; price: number }[]
 
   const sellMap = new Map(sellRows.map((r) => [r.ticker_id, r]))
   const feeMap = new Map(feeRows.map((r) => [r.ticker_id, r.total_fee]))
@@ -83,33 +81,33 @@ export function calcHoldings(): Holding[] {
   })
 }
 
-export function calcActiveHoldings(): Holding[] {
-  return calcHoldings().filter((h) => h.quantity > 0)
+export async function calcActiveHoldings(): Promise<Holding[]> {
+  return (await calcHoldings()).filter((h) => h.quantity > 0)
 }
 
-export function calcClosedPositions(): ClosedPosition[] {
-  return calcHoldings()
+export async function calcClosedPositions(): Promise<ClosedPosition[]> {
+  return (await calcHoldings())
     .filter((h) => h.quantity === 0)
     .map((h) => ({ tickerId: h.tickerId, realizedPnl: h.realizedPnl, totalFee: h.totalFee }))
 }
 
-export function calcCurrentQuantity(tickerId: string): number {
+export async function calcCurrentQuantity(tickerId: string): Promise<number> {
   const db = getDb()
-  const buyRow = db
-    .prepare(
-      `SELECT COALESCE(SUM(quantity), 0) as qty FROM transactions WHERE ticker_id = ? AND type = 'buy'`
-    )
-    .get(tickerId) as { qty: number }
-  const sellRow = db
-    .prepare(
-      `SELECT COALESCE(SUM(quantity), 0) as qty FROM transactions WHERE ticker_id = ? AND type = 'sell'`
-    )
-    .get(tickerId) as { qty: number }
-  return buyRow.qty - sellRow.qty
+  const { rows: buyRaw } = await db.execute({
+    sql: `SELECT COALESCE(SUM(quantity), 0) as qty FROM transactions WHERE ticker_id = ? AND type = 'buy'`,
+    args: [tickerId],
+  })
+  const { rows: sellRaw } = await db.execute({
+    sql: `SELECT COALESCE(SUM(quantity), 0) as qty FROM transactions WHERE ticker_id = ? AND type = 'sell'`,
+    args: [tickerId],
+  })
+  const buyQty = (buyRaw[0] as unknown as { qty: number }).qty
+  const sellQty = (sellRaw[0] as unknown as { qty: number }).qty
+  return buyQty - sellQty
 }
 
-export function calcPortfolioSummary(): PortfolioSummary {
-  const all = calcHoldings()
+export async function calcPortfolioSummary(): Promise<PortfolioSummary> {
+  const all = await calcHoldings()
   const holdings = all.filter((h) => h.quantity > 0)
   const closed = all
     .filter((h) => h.quantity === 0)

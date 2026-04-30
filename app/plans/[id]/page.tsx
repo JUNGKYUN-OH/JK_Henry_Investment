@@ -9,10 +9,10 @@ import { formatUSD, formatQty } from '@/lib/format'
 
 export default async function PlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const plan = getPlanById(id)
+  const plan = await getPlanById(id)
   if (!plan) notFound()
 
-  const transactions = getTransactionsByPlanId(id)
+  const transactions = await getTransactionsByPlanId(id)
 
   return (
     <div className="p-6 max-w-3xl">

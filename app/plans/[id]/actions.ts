@@ -27,12 +27,12 @@ export async function recordDailyEntryAction(
   if (isNaN(price) || price <= 0) return { error: '매수가를 입력하세요.' }
   if (isNaN(fee) || fee < 0) return { error: '수수료를 입력하세요.' }
 
-  if (isDuplicateDate(planId, date)) {
+  if (await isDuplicateDate(planId, date)) {
     return { error: '해당 날짜에 이미 매수 기록이 있습니다.' }
   }
 
   try {
-    recordDailyEntry(planId, { date, quantity, price, fee })
+    await recordDailyEntry(planId, { date, quantity, price, fee })
   } catch (err) {
     return { error: err instanceof Error ? err.message : '기록 저장 실패' }
   }

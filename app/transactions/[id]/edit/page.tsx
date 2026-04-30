@@ -10,10 +10,10 @@ interface Props {
 
 export default async function EditTransactionPage({ params }: Props) {
   const { id } = await params
-  const transaction = getTransactionById(id)
+  const transaction = await getTransactionById(id)
   if (!transaction) notFound()
 
-  const tickers = getAllTickersWithCounts()
+  const tickers = await getAllTickersWithCounts()
 
   return (
     <div className="p-6 max-w-lg">
