@@ -11,14 +11,16 @@ export async function fetchAndCachePrices(
 ): Promise<{ results: PriceFetchResult[]; anyError: boolean }> {
   if (tickerIds.length === 0) return { results: [], anyError: false }
 
-  const yahooFinance = (await import('yahoo-finance2')).default
+  // yahoo-finance2 v3 requires instantiation; default export is the class, not a singleton
+  const YahooFinance = (await import('yahoo-finance2')).default
+  const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] } as never)
   const results: PriceFetchResult[] = []
   let anyError = false
 
   await Promise.all(
     tickerIds.map(async (tickerId) => {
       try {
-        const quote = await yahooFinance.quote(tickerId, { fields: ['regularMarketPrice'] })
+        const quote = await yf.quote(tickerId, { fields: ['regularMarketPrice'] })
         const price = (quote as { regularMarketPrice?: number }).regularMarketPrice ?? null
         if (price == null) throw new Error('No price data')
 
