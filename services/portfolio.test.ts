@@ -4,8 +4,8 @@ import { setDb, initSchema } from '@/lib/db'
 import { addTicker } from './ticker'
 import { createTransaction } from './transaction'
 import {
-  calcHoldings,
   calcActiveHoldings,
+  calcClosedPositions,
   calcCurrentQuantity,
   calcPortfolioSummary,
 } from './portfolio'
@@ -44,6 +44,26 @@ describe('calcPortfolioSummary', () => {
     const summary = calcPortfolioSummary()
     expect(summary.totalFee).toBeCloseTo(2.5, 4)
     expect(summary.totalCost).toBeCloseTo(4500, 4)
+  })
+})
+
+describe('calcHoldings — with sells', () => {
+  it('S4: 10주 @ $450 매수 후 5주 @ $480 매도 → 보유 5주, 실현손익 +$150', () => {
+    createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 0 })
+    createTransaction({ tickerId: 'SPY', type: 'sell', date: '2024-01-20', quantity: 5, price: 480, fee: 0 })
+    const [holding] = calcActiveHoldings()
+    expect(holding.quantity).toBe(5)
+    expect(holding.realizedPnl).toBeCloseTo(150, 4)
+  })
+
+  it('S5: 전량 매도 후 보유 중에 없고 매도 완료에 있다', () => {
+    createTransaction({ tickerId: 'SPY', type: 'buy', date: '2024-01-15', quantity: 10, price: 450, fee: 0 })
+    createTransaction({ tickerId: 'SPY', type: 'sell', date: '2024-01-20', quantity: 10, price: 480, fee: 0 })
+    expect(calcActiveHoldings()).toHaveLength(0)
+    const closed = calcClosedPositions()
+    expect(closed).toHaveLength(1)
+    expect(closed[0].tickerId).toBe('SPY')
+    expect(closed[0].realizedPnl).toBeCloseTo(300, 4)
   })
 })
 

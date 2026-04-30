@@ -21,7 +21,8 @@ export function HoldingsTable() {
             <th className="py-2 pr-4 font-medium text-right">투자금액</th>
             <th className="py-2 pr-4 font-medium text-right">현재가</th>
             <th className="py-2 pr-4 font-medium text-right">평가금액</th>
-            <th className="py-2 font-medium text-right">미실현손익</th>
+            <th className="py-2 pr-4 font-medium text-right">미실현손익</th>
+            <th className="py-2 font-medium text-right">실현손익</th>
           </tr>
         </thead>
         <tbody>
@@ -37,11 +38,20 @@ export function HoldingsTable() {
               <td className="py-3 pr-4 text-right tabular-nums">
                 {h.marketValue != null ? formatUSD(h.marketValue) : '—'}
               </td>
-              <td className="py-3 text-right tabular-nums">
+              <td className="py-3 pr-4 text-right tabular-nums">
                 {h.unrealizedPnl != null ? (
                   <span className={h.unrealizedPnl >= 0 ? 'text-green-600' : 'text-destructive'}>
                     {formatUSD(h.unrealizedPnl)}{' '}
                     {h.unrealizedPnlPct != null && `(${formatPct(h.unrealizedPnlPct)})`}
+                  </span>
+                ) : (
+                  '—'
+                )}
+              </td>
+              <td className="py-3 text-right tabular-nums">
+                {h.realizedPnl !== 0 ? (
+                  <span className={h.realizedPnl >= 0 ? 'text-green-600' : 'text-destructive'}>
+                    {formatUSD(h.realizedPnl)}
                   </span>
                 ) : (
                   '—'

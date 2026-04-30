@@ -1,4 +1,5 @@
 import { HoldingsTable } from '@/components/dashboard/HoldingsTable'
+import { ClosedPositionsTable } from '@/components/dashboard/ClosedPositionsTable'
 import { calcPortfolioSummary } from '@/services/portfolio'
 import { formatUSD } from '@/lib/format'
 
@@ -46,6 +47,8 @@ export default function DashboardPage() {
         <h2 className="text-sm font-medium mb-3">보유 중</h2>
         <HoldingsTable />
       </section>
+
+      <ClosedPositionsTable />
     </div>
   )
 }
