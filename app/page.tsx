@@ -21,6 +21,7 @@ export default function DashboardPage() {
       : null
 
   const holdingTickerIds = holdings.map((h) => h.tickerId)
+  const missingPriceTickers = holdingTickerIds.filter((id) => !priceCache.has(id))
 
   return (
     <div className="p-6 max-w-4xl">
@@ -67,9 +68,9 @@ export default function DashboardPage() {
         <HoldingsTable />
       </section>
 
-      {holdingTickerIds.length > 0 && (
+      {missingPriceTickers.length > 0 && (
         <section className="mb-8">
-          <ManualPriceInput tickerIds={holdingTickerIds} saveAction={saveManualPricesAction} />
+          <ManualPriceInput tickerIds={missingPriceTickers} saveAction={saveManualPricesAction} />
         </section>
       )}
 
