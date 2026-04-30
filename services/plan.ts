@@ -22,17 +22,22 @@ function rowToPlan(row: {
   }
 }
 
-function calcPlanProgress(planId: string, totalAmount: number, dailyAmount: number) {
+function calcPlanProgress(planId: string, tickerId: string, totalAmount: number) {
   const db = getDb()
-  const txRows = db
-    .prepare(
-      `SELECT quantity, price FROM transactions WHERE plan_id = ? AND type = 'buy'`
-    )
-    .all(planId) as { quantity: number; price: number }[]
 
-  const completedDays = txRows.length
-  const totalSpent = txRows.reduce((sum, r) => sum + r.quantity * r.price, 0)
-  const totalBuyQty = txRows.reduce((sum, r) => sum + r.quantity, 0)
+  // 진행일수: 계획에 연결된 매수만 (40일 완료 추적용)
+  const { cnt } = db
+    .prepare(`SELECT COUNT(*) AS cnt FROM transactions WHERE plan_id = ? AND type = 'buy'`)
+    .get(planId) as { cnt: number }
+  const completedDays = cnt
+
+  // 잔여금액·평균단가·목표매도가: 해당 티커 전체 매수 기준
+  const allRows = db
+    .prepare(`SELECT quantity, price FROM transactions WHERE ticker_id = ? AND type = 'buy'`)
+    .all(tickerId) as { quantity: number; price: number }[]
+
+  const totalSpent = allRows.reduce((sum, r) => sum + r.quantity * r.price, 0)
+  const totalBuyQty = allRows.reduce((sum, r) => sum + r.quantity, 0)
   const remainingAmount = Math.max(0, totalAmount - totalSpent)
   const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
   const targetSellPrice = planAvgCost != null ? planAvgCost * 1.1 : null
@@ -48,33 +53,41 @@ export function getAllPlans(): PlanWithProgress[] {
 
   if (rows.length === 0) return []
 
-  const ids = rows.map((r) => r.id)
-  const placeholders = ids.map(() => '?').join(',')
-  const txAgg = db
+  const planIds = rows.map((r) => r.id)
+  const tickerIds = [...new Set(rows.map((r) => r.ticker_id))]
+
+  // 진행일수: 계획에 연결된 매수만
+  const dayPlaceholders = planIds.map(() => '?').join(',')
+  const dayAgg = db
     .prepare(
-      `SELECT plan_id,
-              COUNT(*) AS completed_days,
+      `SELECT plan_id, COUNT(*) AS completed_days
+       FROM transactions
+       WHERE type = 'buy' AND plan_id IN (${dayPlaceholders})
+       GROUP BY plan_id`
+    )
+    .all(...planIds) as { plan_id: string; completed_days: number }[]
+  const dayMap = new Map(dayAgg.map((r) => [r.plan_id, r.completed_days]))
+
+  // 잔여금액·평균단가·목표매도가: 해당 티커 전체 매수 기준
+  const tickerPlaceholders = tickerIds.map(() => '?').join(',')
+  const tickerAgg = db
+    .prepare(
+      `SELECT ticker_id,
               SUM(quantity * price) AS total_spent,
               SUM(quantity) AS total_buy_qty
        FROM transactions
-       WHERE type = 'buy' AND plan_id IN (${placeholders})
-       GROUP BY plan_id`
+       WHERE type = 'buy' AND ticker_id IN (${tickerPlaceholders})
+       GROUP BY ticker_id`
     )
-    .all(...ids) as {
-    plan_id: string
-    completed_days: number
-    total_spent: number
-    total_buy_qty: number
-  }[]
-
-  const aggMap = new Map(txAgg.map((r) => [r.plan_id, r]))
+    .all(...tickerIds) as { ticker_id: string; total_spent: number; total_buy_qty: number }[]
+  const tickerMap = new Map(tickerAgg.map((r) => [r.ticker_id, r]))
 
   return rows.map((row) => {
     const plan = rowToPlan(row)
-    const agg = aggMap.get(plan.id)
-    const completedDays = agg?.completed_days ?? 0
-    const totalSpent = agg?.total_spent ?? 0
-    const totalBuyQty = agg?.total_buy_qty ?? 0
+    const completedDays = dayMap.get(plan.id) ?? 0
+    const ta = tickerMap.get(plan.tickerId)
+    const totalSpent = ta?.total_spent ?? 0
+    const totalBuyQty = ta?.total_buy_qty ?? 0
     const remainingAmount = Math.max(0, plan.totalAmount - totalSpent)
     const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
     const targetSellPrice = planAvgCost != null ? planAvgCost * 1.1 : null
@@ -88,7 +101,7 @@ export function getPlanById(id: string): PlanWithProgress | null {
     .get(id) as Parameters<typeof rowToPlan>[0] | undefined
   if (!row) return null
   const plan = rowToPlan(row)
-  return { ...plan, ...calcPlanProgress(plan.id, plan.totalAmount, plan.dailyAmount) }
+  return { ...plan, ...calcPlanProgress(plan.id, plan.tickerId, plan.totalAmount) }
 }
 
 export function getActivePlanByTicker(tickerId: string): Plan | null {
