@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { HoldingsTable } from '@/components/dashboard/HoldingsTable'
 import { ClosedPositionsTable } from '@/components/dashboard/ClosedPositionsTable'
 import { PriceRefreshButton } from '@/components/dashboard/PriceRefreshButton'

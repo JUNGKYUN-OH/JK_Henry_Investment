@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getAllTickersWithCounts } from '@/services/ticker'
 import { addTickerAction, deleteTickerAction } from './actions'
 import { TickerManager } from '@/components/tickers/TickerManager'

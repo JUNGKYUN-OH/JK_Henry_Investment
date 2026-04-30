@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { getAllTickersWithCounts } from '@/services/ticker'
 import { getAllTransactions } from '@/services/transaction'

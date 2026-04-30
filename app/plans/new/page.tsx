@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getAllTickers } from '@/services/ticker'
 import { PlanNewForm } from '@/components/plans/PlanNewForm'
 import { createPlanAction } from '../actions'
