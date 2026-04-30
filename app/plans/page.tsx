@@ -1,8 +1,21 @@
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { PlanList } from '@/components/plans/PlanList'
+import { getAllPlans } from '@/services/plan'
+
 export default function PlansPage() {
+  const plans = getAllPlans()
+
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-semibold mb-4">투자 계획</h1>
-      <p className="text-muted-foreground text-sm">분할 매수 계획이 여기에 표시됩니다.</p>
+    <div className="p-6 max-w-3xl">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-semibold">투자 계획</h1>
+        <Button asChild size="sm">
+          <Link href="/plans/new">+ 새 계획</Link>
+        </Button>
+      </div>
+
+      <PlanList plans={plans} />
     </div>
   )
 }
