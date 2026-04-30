@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe: Henry Ledger</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root { --w-bg:#f5f5f5; --w-border:#ccc; --w-text:#555; --w-muted:#aaa; --w-fill:#eee; }
+  * { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace; color:var(--w-text); }
+  body { background:var(--w-bg); margin:0; padding:0; }
+  nav { position:sticky; top:0; z-index:40; background:var(--w-bg); border-bottom:1px solid var(--w-border); }
+  nav button { cursor:pointer; font-size:12px; font-family:inherit; background:none; border:none; }
+  nav button:hover { background:var(--w-fill); border-radius:4px; }
+  nav button.active { font-weight:bold; border-bottom:2px solid var(--w-text); }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .vp-toggle button { font-size:12px; padding:2px 8px; border:1px solid var(--w-border); cursor:pointer; background:white; font-family:inherit; }
+  .vp-toggle button:first-child { border-radius:4px 0 0 4px; }
+  .vp-toggle button:last-child { border-radius:0 4px 4px 0; border-left:none; }
+  .vp-toggle button.active { background:var(--w-text); color:white; }
+
+  body.viewport-mobile .screen-content {
+    max-width:375px !important; margin:24px auto !important;
+    border:2px solid var(--w-border); border-radius:24px; min-height:667px;
+    background:white; box-shadow:0 4px 24px rgba(0,0,0,.08);
+    padding:0 !important; overflow:hidden;
+  }
+  body.viewport-mobile .screen-notes { display:none; }
+
+  .screen-notes { background:#fffde7; border-left:3px solid #ffd54f; padding:12px 16px; margin-top:24px; font-size:13px; border-radius:0 4px 4px 0; }
+  .screen-notes summary { cursor:pointer; font-weight:bold; font-size:12px; color:#b0a050; text-transform:uppercase; letter-spacing:.05em; }
+  .screen-notes p { margin:6px 0 2px; color:#777; }
+  .screen-notes ul { margin:4px 0 0 16px; padding:0; color:#777; }
+  .screen-notes li { margin:2px 0; }
+
+  /* Shell */
+  .w-shell { display:flex; min-height:667px; position:relative; }
+  .w-sidebar { width:176px; border-right:1px solid var(--w-border); flex-shrink:0; background:white; }
+  .w-main { flex:1; overflow-y:auto; padding:20px; background:white; }
+  .w-bottom-nav { display:none; flex-shrink:0; border-top:1px solid var(--w-border); background:white; }
+
+  body.viewport-mobile .w-shell { flex-direction:column; }
+  body.viewport-mobile .w-sidebar { display:none; }
+  body.viewport-mobile .w-main { padding:16px; }
+  body.viewport-mobile .w-bottom-nav { display:flex; }
+
+  .w-logo { padding:14px 16px; border-bottom:1px solid var(--w-border); display:flex; align-items:center; gap:8px; }
+  .w-nav-item { display:flex; align-items:center; gap:8px; padding:9px 16px; cursor:pointer; font-size:12px; }
+  .w-nav-item:hover { background:var(--w-fill); }
+  .w-nav-item.active { background:var(--w-fill); font-weight:bold; }
+  .w-tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 0; font-size:10px; cursor:pointer; }
+  .w-tab.active { font-weight:bold; }
+  .w-tab:not(.active) * { color:var(--w-muted); }
+
+  /* Components */
+  .w-card { border:1px solid var(--w-border); border-radius:6px; padding:12px; }
+  .w-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .w-table th { text-align:left; padding:5px 8px; font-size:11px; color:var(--w-muted); border-bottom:1px solid var(--w-border); white-space:nowrap; }
+  .w-table td { padding:8px; border-bottom:1px solid var(--w-fill); vertical-align:middle; white-space:nowrap; }
+  .w-table tr:last-child td { border-bottom:none; }
+  .w-input { border:1px solid var(--w-border); border-radius:4px; padding:6px 10px; font-size:12px; font-family:inherit; background:white; width:100%; box-sizing:border-box; }
+  .w-input.err { border-color:#c44; }
+  .w-select { border:1px solid var(--w-border); border-radius:4px; padding:6px 10px; font-size:12px; font-family:inherit; background:white; width:100%; }
+  .w-btn { border:1px solid var(--w-border); border-radius:4px; padding:6px 12px; font-size:12px; cursor:pointer; background:white; font-family:inherit; display:inline-flex; align-items:center; gap:4px; }
+  .w-btn-primary { background:var(--w-text); color:white; border-color:var(--w-text); }
+  .w-btn-ghost { border-color:transparent; }
+  .w-btn-danger { border-color:#c44; color:#c44; }
+  .w-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .w-label { font-size:11px; color:var(--w-muted); margin-bottom:3px; }
+  .w-err-text { font-size:11px; color:#c44; margin-top:3px; }
+  .w-section-hd { font-size:11px; font-weight:bold; color:var(--w-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+  .w-pos { color:#297a52; }
+  .w-neg { color:#c44; }
+  .w-badge-buy { font-size:10px; padding:1px 6px; border-radius:3px; background:#e8f5e9; color:#297a52; border:1px solid #a5d6a7; display:inline-block; }
+  .w-badge-sell { font-size:10px; padding:1px 6px; border-radius:3px; background:#fce4ec; color:#c44; border:1px solid #f48fb1; display:inline-block; }
+  .w-seg { display:inline-flex; border:1px solid var(--w-border); border-radius:4px; overflow:hidden; }
+  .w-seg-opt { padding:5px 18px; font-size:12px; cursor:pointer; font-family:inherit; background:white; border:none; }
+  .w-seg-opt.active { background:var(--w-text); color:white; }
+  .w-error-banner { background:#fce4ec; border:1px solid #f8bbd0; border-radius:4px; padding:10px 12px; font-size:12px; color:#c44; display:flex; align-items:flex-start; gap:8px; }
+  .w-page-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .w-page-title { font-size:14px; font-weight:bold; }
+  .w-form-row { margin-bottom:14px; }
+  .w-divider { border:none; border-top:1px solid var(--w-fill); margin:16px 0; }
+
+  /* Dialog */
+  .w-dialog-overlay { position:absolute; inset:0; background:rgba(0,0,0,.25); display:flex; align-items:center; justify-content:center; z-index:20; }
+  .w-dialog { background:white; border:1px solid var(--w-border); border-radius:8px; padding:20px; max-width:280px; width:90%; }
+</style>
+</head>
+<body class="p-0 m-0 viewport-mobile">
+
+<nav class="flex items-center gap-2 px-4 py-2" style="flex-wrap:wrap">
+  <span style="font-size:11px;color:var(--w-muted)">wireframe</span>
+  <button id="nav-0" onclick="show(0)" class="px-2 py-1">대시보드</button>
+  <button id="nav-1" onclick="show(1)" class="px-2 py-1">대시보드(API실패)</button>
+  <button id="nav-2" onclick="show(2)" class="px-2 py-1">거래 내역</button>
+  <button id="nav-3" onclick="show(3)" class="px-2 py-1">거래 입력</button>
+  <button id="nav-4" onclick="show(4)" class="px-2 py-1">거래 수정</button>
+  <button id="nav-5" onclick="show(5)" class="px-2 py-1">티커 관리</button>
+  <button id="nav-6" onclick="show(6)" class="px-2 py-1">삭제 다이얼로그</button>
+  <button id="nav-7" onclick="show(7)" class="px-2 py-1">투자 계획 목록</button>
+  <button id="nav-8" onclick="show(8)" class="px-2 py-1">계획 생성</button>
+  <button id="nav-9" onclick="show(9)" class="px-2 py-1">계획 상세</button>
+  <div class="vp-toggle flex ml-auto">
+    <button id="vp-desktop" onclick="setViewport('desktop')">Desktop</button>
+    <button id="vp-mobile" onclick="setViewport('mobile')" class="active">Mobile</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 0: 대시보드 (정상)
+     시나리오: 3, 5, 6
+════════════════════════════════════════════ -->
+<div id="screen-0" class="screen" data-scenario="scenario-3,scenario-5,scenario-6">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <!-- Sidebar -->
+  <aside class="w-sidebar">
+    <div class="w-logo">
+      <i data-lucide="bar-chart-2" style="width:15px;height:15px"></i>
+      <span style="font-size:13px;font-weight:bold">Henry Ledger</span>
+    </div>
+    <div class="w-nav-item active"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <!-- Main -->
+  <main class="w-main">
+    <div class="w-page-hd">
+      <span class="w-page-title">포트폴리오 대시보드</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:10px;color:var(--w-muted)">최종 업데이트: 2024-01-15 14:32</span>
+        <button class="w-btn" style="font-size:11px">
+          <i data-lucide="refresh-cw" style="width:11px;height:11px"></i>현재가 새로고침
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+      <div class="w-card">
+        <div class="w-label">총 투자금</div>
+        <div style="font-size:15px;font-weight:bold">$13,300.00</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">총 평가금액</div>
+        <div style="font-size:15px;font-weight:bold">$15,120.00</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">미실현손익</div>
+        <div style="font-size:15px;font-weight:bold" class="w-pos">+$1,820.00</div>
+        <div style="font-size:11px" class="w-pos">+13.68%</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">총 수수료</div>
+        <div style="font-size:15px;font-weight:bold">$7.50</div>
+      </div>
+    </div>
+
+    <!-- Holdings -->
+    <div class="w-card" style="margin-bottom:12px">
+      <div class="w-section-hd">보유 중</div>
+      <div style="overflow-x:auto">
+        <table class="w-table">
+          <thead><tr>
+            <th>티커</th><th>수량</th><th>평균단가</th><th>현재가</th>
+            <th>평가금액</th><th>미실현손익</th><th>자산비중</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>SPY</strong></td><td>20</td><td>$440.00</td><td>$473.50</td>
+              <td>$9,470.00</td><td class="w-pos">+$670.00 (+7.6%)</td><td>62.6%</td>
+            </tr>
+            <tr>
+              <td><strong>QQQ</strong></td><td>10</td><td>$385.00</td><td>$565.00</td>
+              <td>$5,650.00</td><td class="w-pos">+$1,800.00 (+46.8%)</td><td>37.4%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Closed Positions -->
+    <div class="w-card">
+      <div class="w-section-hd">매도 완료</div>
+      <table class="w-table">
+        <thead><tr><th>티커</th><th>최종 매도일</th><th>실현손익</th></tr></thead>
+        <tbody>
+          <tr><td><strong>IVV</strong></td><td>2023-12-10</td><td class="w-neg">-$120.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="w-bottom-nav">
+    <div class="w-tab active"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 3·5·6</p>
+  <ul>
+    <li>트리거: 앱 시작 시 기본 화면</li>
+    <li>인터랙션: "현재가 새로고침" 클릭 → 로딩 후 현재가·평가금액·미실현손익 업데이트 / 전량 매도 종목은 "매도 완료" 섹션으로 이동</li>
+    <li>전환: 사이드바/탭 → 거래 내역·티커 관리</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1: 대시보드 (API 실패)
+     시나리오: 7
+════════════════════════════════════════════ -->
+<div id="screen-1" class="screen" data-scenario="scenario-7">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item active"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <div class="w-page-hd">
+      <span class="w-page-title">포트폴리오 대시보드</span>
+      <button class="w-btn" style="font-size:11px" disabled>
+        <i data-lucide="refresh-cw" style="width:11px;height:11px"></i>현재가 새로고침
+      </button>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="w-error-banner" style="margin-bottom:16px">
+      <i data-lucide="alert-circle" style="width:14px;height:14px;flex-shrink:0;margin-top:1px"></i>
+      현재가를 불러오지 못했습니다. 직접 입력하거나 잠시 후 다시 시도해 주세요.
+    </div>
+
+    <!-- Summary Cards (no current price) -->
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+      <div class="w-card">
+        <div class="w-label">총 투자금</div>
+        <div style="font-size:15px;font-weight:bold">$13,300.00</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">총 평가금액</div>
+        <div style="font-size:15px;color:var(--w-muted)">—</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">미실현손익</div>
+        <div style="color:var(--w-muted)">—</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">총 수수료</div>
+        <div style="font-size:15px;font-weight:bold">$7.50</div>
+      </div>
+    </div>
+
+    <!-- Manual price input -->
+    <div class="w-card">
+      <div class="w-section-hd">현재가 수동 입력</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-weight:bold;width:48px">SPY</span>
+          <input class="w-input" placeholder="현재가 ($)" style="max-width:150px">
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-weight:bold;width:48px">QQQ</span>
+          <input class="w-input" placeholder="현재가 ($)" style="max-width:150px">
+        </div>
+        <button class="w-btn w-btn-primary" style="align-self:flex-start;margin-top:4px">확인</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab active"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 7</p>
+  <ul>
+    <li>트리거: "현재가 새로고침" 클릭 후 API 실패</li>
+    <li>인터랙션: 종목별 현재가 직접 입력 → "확인" 클릭 → 미실현손익 계산</li>
+    <li>전환: 이전 조회값 있으면 그 값 유지하며 에러 배너만 표시</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2: 거래 내역
+     시나리오: 2, 8, 9
+════════════════════════════════════════════ -->
+<div id="screen-2" class="screen" data-scenario="scenario-2,scenario-8,scenario-9">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item active"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <div class="w-page-hd">
+      <span class="w-page-title">거래 내역</span>
+      <button class="w-btn w-btn-primary" style="font-size:11px">
+        <i data-lucide="plus" style="width:12px;height:12px"></i>거래 추가
+      </button>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="w-table">
+        <thead><tr>
+          <th>날짜</th><th>티커</th><th>구분</th><th>수량</th><th>단가</th><th>수수료</th><th style="text-align:right">작업</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>2024-01-15</td><td><strong>SPY</strong></td>
+            <td><span class="w-badge-buy">매수</span></td>
+            <td>10</td><td>$450.00</td><td>$2.50</td>
+            <td style="text-align:right">
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px;color:#c44"><i data-lucide="trash-2" style="width:12px;height:12px;color:#c44"></i></button>
+            </td>
+          </tr>
+          <tr>
+            <td>2024-02-03</td><td><strong>SPY</strong></td>
+            <td><span class="w-badge-buy">매수</span></td>
+            <td>10</td><td>$430.00</td><td>$2.50</td>
+            <td style="text-align:right">
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px"><i data-lucide="trash-2" style="width:12px;height:12px;color:#c44"></i></button>
+            </td>
+          </tr>
+          <tr>
+            <td>2024-02-20</td><td><strong>SPY</strong></td>
+            <td><span class="w-badge-sell">매도</span></td>
+            <td>5</td><td>$480.00</td><td>$2.50</td>
+            <td style="text-align:right">
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px"><i data-lucide="trash-2" style="width:12px;height:12px;color:#c44"></i></button>
+            </td>
+          </tr>
+          <tr>
+            <td>2024-03-01</td><td><strong>QQQ</strong></td>
+            <td><span class="w-badge-buy">매수</span></td>
+            <td>10</td><td>$385.00</td><td>$2.50</td>
+            <td style="text-align:right">
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+              <button class="w-btn w-btn-ghost" style="padding:3px 6px"><i data-lucide="trash-2" style="width:12px;height:12px;color:#c44"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab active"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 2·8·9</p>
+  <ul>
+    <li>트리거: 사이드바/탭 "거래 내역" 클릭</li>
+    <li>인터랙션: "거래 추가" → 거래 입력 폼 / 연필 아이콘 → 거래 수정 폼 / 쓰레기통 → 삭제 다이얼로그</li>
+    <li>전환: 저장/취소 후 거래 내역으로 복귀</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 3-A: 거래 입력 — 계획 있는 티커 (SPY, 자동 채움)
+     시나리오: 2 (계획 연동)
+════════════════════════════════════════════ -->
+<div id="screen-3" class="screen" data-scenario="scenario-2">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item active"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item"><i data-lucide="calendar-check" style="width:13px;height:13px"></i>투자 계획</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <div class="w-page-hd">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="w-btn w-btn-ghost" style="padding:4px"><i data-lucide="arrow-left" style="width:14px;height:14px"></i></button>
+        <span class="w-page-title">거래 추가</span>
+      </div>
+    </div>
+
+    <div style="max-width:420px">
+      <!-- 티커 -->
+      <div class="w-form-row">
+        <div class="w-label">티커 *</div>
+        <select class="w-select">
+          <option value="">티커 선택</option>
+          <option selected>SPY</option>
+          <option>QQQ</option>
+          <option>VOO</option>
+        </select>
+      </div>
+
+      <!-- 계획 컨텍스트 배너 (활성 계획 있는 티커 선택 시 표시) -->
+      <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+        <i data-lucide="calendar-check" style="width:14px;height:14px;color:#297a52;flex-shrink:0"></i>
+        <div>
+          <div style="font-size:12px;font-weight:bold;color:#297a52">SPY 투자 계획 진행 중 · 5일차 / 40일</div>
+          <div style="font-size:11px;color:#4a9a6a;margin-top:1px">오늘 매수 목표: <strong>$100.00</strong> · 단가·수량 자동 채움 적용됨</div>
+        </div>
+      </div>
+
+      <!-- 매수/매도 -->
+      <div class="w-form-row">
+        <div class="w-label">구분 *</div>
+        <div class="w-seg">
+          <button class="w-seg-opt active">매수</button>
+          <button class="w-seg-opt">매도</button>
+        </div>
+      </div>
+
+      <!-- 날짜 -->
+      <div class="w-form-row">
+        <div class="w-label">날짜 *</div>
+        <input class="w-input" type="date" value="2024-01-19">
+      </div>
+
+      <!-- 단가 (자동 채움) -->
+      <div class="w-form-row">
+        <div class="w-label" style="display:flex;align-items:center;gap:6px">
+          단가 ($) *
+          <span style="font-size:10px;background:var(--w-fill);border:1px solid var(--w-border);border-radius:3px;padding:1px 5px;color:var(--w-muted)">자동</span>
+        </div>
+        <input class="w-input" type="number" value="473.50">
+        <div style="font-size:10px;color:var(--w-muted);margin-top:3px">
+          <i data-lucide="info" style="width:10px;height:10px;display:inline;vertical-align:middle"></i>
+          Yahoo Finance 마지막 조회가 · 수정 가능
+        </div>
+      </div>
+
+      <!-- 수량 (자동 채움) -->
+      <div class="w-form-row">
+        <div class="w-label" style="display:flex;align-items:center;gap:6px">
+          수량 *
+          <span style="font-size:10px;background:var(--w-fill);border:1px solid var(--w-border);border-radius:3px;padding:1px 5px;color:var(--w-muted)">자동</span>
+        </div>
+        <input class="w-input" type="number" value="0.211">
+        <div style="font-size:10px;color:var(--w-muted);margin-top:3px">
+          $100.00 ÷ $473.50 = 0.211 · 단가 변경 시 재계산
+        </div>
+      </div>
+
+      <!-- 수수료 -->
+      <div class="w-form-row">
+        <div class="w-label">수수료 ($)</div>
+        <input class="w-input" type="number" placeholder="0.00" value="2.50">
+        <div style="font-size:10px;color:var(--w-muted);margin-top:3px">수수료는 평균단가에 포함되지 않습니다</div>
+      </div>
+
+      <hr class="w-divider">
+      <div style="display:flex;gap:8px">
+        <button class="w-btn">취소</button>
+        <button class="w-btn w-btn-primary">저장</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab active"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab"><i data-lucide="calendar-check" style="width:20px;height:20px"></i>투자 계획</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 2 — SPY 선택 시 활성 계획 감지, 자동 채움 적용</p>
+  <ul>
+    <li>트리거: 거래 내역 "거래 추가" 클릭</li>
+    <li>인터랙션 (계획 있는 티커): 티커 선택 → 계획 컨텍스트 배너 표시 + 단가(마지막 조회가) 자동 채움 + 수량($100÷단가) 자동 계산</li>
+    <li>인터랙션 (자동 채움 후): 단가 수정 → 수량 즉시 재계산 / 수량 직접 수정 → 이후 단가 변경 시 수량 자동 재계산 해제</li>
+    <li>인터랙션 (계획 없는 티커): 배너 없음, 단가·수량 빈 값으로 시작</li>
+    <li>전환: 저장 → 거래 내역 + 계획 진행 상황 N+1일차로 갱신 / 취소 → 거래 내역</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 4: 거래 수정 폼 (기존 값 프리필)
+     시나리오: 8
+════════════════════════════════════════════ -->
+<div id="screen-4" class="screen" data-scenario="scenario-8">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item active"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <div class="w-page-hd">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="w-btn w-btn-ghost" style="padding:4px"><i data-lucide="arrow-left" style="width:14px;height:14px"></i></button>
+        <span class="w-page-title">거래 수정</span>
+      </div>
+    </div>
+
+    <div style="max-width:420px">
+      <div class="w-form-row">
+        <div class="w-label">티커 *</div>
+        <select class="w-select">
+          <option>SPY</option><option>QQQ</option><option>VOO</option>
+        </select>
+      </div>
+      <div class="w-form-row">
+        <div class="w-label">구분 *</div>
+        <div class="w-seg">
+          <button class="w-seg-opt active">매수</button>
+          <button class="w-seg-opt">매도</button>
+        </div>
+      </div>
+      <div class="w-form-row">
+        <div class="w-label">날짜 *</div>
+        <input class="w-input" type="date" value="2024-01-15">
+      </div>
+      <div class="w-form-row">
+        <div class="w-label">수량 *</div>
+        <input class="w-input" type="number" value="10">
+      </div>
+      <div class="w-form-row">
+        <div class="w-label">단가 ($) * <span style="font-size:10px;color:var(--w-muted)">— 기존값: $450.00</span></div>
+        <input class="w-input" type="number" value="445.00">
+      </div>
+      <div class="w-form-row">
+        <div class="w-label">수수료 ($)</div>
+        <input class="w-input" type="number" value="2.50">
+        <div style="font-size:10px;color:var(--w-muted);margin-top:3px">수수료는 평균단가에 포함되지 않습니다</div>
+      </div>
+      <hr class="w-divider">
+      <div style="display:flex;gap:8px">
+        <button class="w-btn">취소</button>
+        <button class="w-btn w-btn-primary">저장</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab active"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 8 — 기존 값이 폼에 프리필됨</p>
+  <ul>
+    <li>트리거: 거래 내역에서 연필 아이콘 클릭</li>
+    <li>인터랙션: 단가를 $450→$445로 변경 후 저장 → 평균단가·투자금액 재계산</li>
+    <li>전환: 저장/취소 → 거래 내역</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 5: 티커 관리
+     시나리오: 1, 10
+════════════════════════════════════════════ -->
+<div id="screen-5" class="screen" data-scenario="scenario-1,scenario-10">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item active"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <div class="w-page-hd">
+      <span class="w-page-title">티커 관리</span>
+    </div>
+
+    <!-- Add Ticker -->
+    <div class="w-card" style="margin-bottom:16px;max-width:420px">
+      <div class="w-section-hd">티커 등록</div>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div style="flex:1">
+          <input class="w-input err" placeholder="티커 입력 (예: SPY)" value="SPY">
+          <div class="w-err-text">이미 등록된 티커입니다</div>
+        </div>
+        <button class="w-btn w-btn-primary" style="flex-shrink:0">추가</button>
+      </div>
+    </div>
+
+    <!-- Ticker List -->
+    <div class="w-card" style="max-width:420px">
+      <div class="w-section-hd">등록된 티커</div>
+      <table class="w-table">
+        <thead><tr><th>티커</th><th>거래 수</th><th style="text-align:right">삭제</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>SPY</strong></td>
+            <td style="color:var(--w-muted)">3건</td>
+            <td style="text-align:right">
+              <button class="w-btn" style="font-size:11px;padding:3px 8px" disabled>삭제</button>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>QQQ</strong></td>
+            <td style="color:var(--w-muted)">1건</td>
+            <td style="text-align:right">
+              <button class="w-btn" style="font-size:11px;padding:3px 8px" disabled>삭제</button>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>VOO</strong></td>
+            <td style="color:var(--w-muted)">0건</td>
+            <td style="text-align:right">
+              <button class="w-btn w-btn-danger" style="font-size:11px;padding:3px 8px">삭제</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Error for disabled delete attempt -->
+      <div style="margin-top:10px;font-size:11px;color:var(--w-muted)">
+        * 거래 기록이 있는 종목은 삭제할 수 없습니다
+      </div>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab active"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 1·10</p>
+  <ul>
+    <li>트리거: 사이드바/탭 "티커 관리" 클릭</li>
+    <li>인터랙션: 빈 입력 → 추가 버튼 비활성화 / 중복 입력 → 에러 메시지 / 거래 있는 티커 삭제 → 비활성화(disabled) / 거래 없는 티커 → 삭제 버튼 활성화 → 삭제 다이얼로그</li>
+    <li>전환: 없음 (단일 화면 내 처리)</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 6: 삭제 확인 다이얼로그
+     시나리오: 9, 10
+════════════════════════════════════════════ -->
+<div id="screen-6" class="screen" data-scenario="scenario-9,scenario-10">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell" style="position:relative">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item active"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <!-- Background: transaction list (dimmed) -->
+  <main class="w-main" style="filter:blur(1px);pointer-events:none;user-select:none">
+    <div class="w-page-hd">
+      <span class="w-page-title">거래 내역</span>
+      <button class="w-btn w-btn-primary" style="font-size:11px"><i data-lucide="plus" style="width:12px;height:12px"></i>거래 추가</button>
+    </div>
+    <table class="w-table">
+      <thead><tr><th>날짜</th><th>티커</th><th>구분</th><th>수량</th><th>단가</th><th>수수료</th><th>작업</th></tr></thead>
+      <tbody>
+        <tr><td>2024-01-15</td><td><strong>SPY</strong></td><td><span class="w-badge-buy">매수</span></td><td>10</td><td>$450.00</td><td>$2.50</td><td>…</td></tr>
+        <tr><td>2024-02-03</td><td><strong>SPY</strong></td><td><span class="w-badge-buy">매수</span></td><td>10</td><td>$430.00</td><td>$2.50</td><td>…</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Dialog Overlay -->
+  <div class="w-dialog-overlay">
+    <div class="w-dialog">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <i data-lucide="trash-2" style="width:16px;height:16px;color:#c44"></i>
+        <span style="font-weight:bold;font-size:13px">거래 삭제</span>
+      </div>
+      <p style="font-size:12px;margin:0 0 6px">이 거래를 삭제하시겠습니까?</p>
+      <p style="font-size:11px;color:var(--w-muted);margin:0 0 18px">SPY 매수 · 10주 · $450.00 · 2024-01-15</p>
+      <p style="font-size:11px;color:var(--w-muted);margin:0 0 18px">삭제 후 평균단가와 포트폴리오 수치가 재계산됩니다.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="w-btn">취소</button>
+        <button class="w-btn w-btn-danger">삭제 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab active"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 9·10</p>
+  <ul>
+    <li>트리거: 거래 내역 쓰레기통 클릭 or 티커 관리 VOO 삭제 클릭</li>
+    <li>인터랙션: "취소" → 다이얼로그 닫힘, 변경 없음 / "삭제 확인" → 항목 제거 후 수치 재계산</li>
+    <li>전환: 삭제 완료 → 거래 내역 (또는 티커 관리) 복귀</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 7: 투자 계획 목록
+     시나리오: 11, 14
+════════════════════════════════════════════ -->
+<div id="screen-7" class="screen" data-scenario="scenario-11,scenario-14">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item active"><i data-lucide="calendar-check" style="width:13px;height:13px"></i>투자 계획</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <div class="w-page-hd">
+      <span class="w-page-title">투자 계획</span>
+      <button class="w-btn w-btn-primary" style="font-size:11px">
+        <i data-lucide="plus" style="width:12px;height:12px"></i>새 계획
+      </button>
+    </div>
+
+    <!-- Active Plans -->
+    <div class="w-section-hd">진행 중</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+
+      <!-- Plan Card: SPY -->
+      <div class="w-card" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <span style="font-weight:bold;font-size:15px">SPY</span>
+            <span style="font-size:11px;color:var(--w-muted);margin-left:8px">총 $4,000 · $100/일</span>
+          </div>
+          <span style="font-size:12px;font-weight:bold">23 / 40일</span>
+        </div>
+        <!-- Progress Bar -->
+        <div style="height:6px;background:var(--w-fill);border-radius:3px;margin-bottom:10px;overflow:hidden">
+          <div style="height:100%;width:57.5%;background:var(--w-text);border-radius:3px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div>
+            <div class="w-label">투자 완료</div>
+            <div style="font-size:12px;font-weight:bold">$2,300.00</div>
+          </div>
+          <div>
+            <div class="w-label">잔여 투자금</div>
+            <div style="font-size:12px;font-weight:bold">$1,700.00</div>
+          </div>
+          <div>
+            <div class="w-label">목표 매도가</div>
+            <div style="font-size:12px;font-weight:bold" class="w-pos">$521.40</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--w-muted)">계획 평균단가 $474.00 · +10% 목표</div>
+      </div>
+
+      <!-- Plan Card: QQQ -->
+      <div class="w-card" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <span style="font-weight:bold;font-size:15px">QQQ</span>
+            <span style="font-size:11px;color:var(--w-muted);margin-left:8px">총 $2,000 · $50/일</span>
+          </div>
+          <span style="font-size:12px;font-weight:bold">5 / 40일</span>
+        </div>
+        <div style="height:6px;background:var(--w-fill);border-radius:3px;margin-bottom:10px;overflow:hidden">
+          <div style="height:100%;width:12.5%;background:var(--w-text);border-radius:3px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div>
+            <div class="w-label">투자 완료</div>
+            <div style="font-size:12px;font-weight:bold">$250.00</div>
+          </div>
+          <div>
+            <div class="w-label">잔여 투자금</div>
+            <div style="font-size:12px;font-weight:bold">$1,750.00</div>
+          </div>
+          <div>
+            <div class="w-label">목표 매도가</div>
+            <div style="font-size:12px;font-weight:bold" class="w-pos">$621.50</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--w-muted)">계획 평균단가 $565.00 · +10% 목표</div>
+      </div>
+    </div>
+
+    <!-- Completed Plans -->
+    <div class="w-section-hd">완료</div>
+    <div class="w-card">
+      <table class="w-table">
+        <thead><tr><th>티커</th><th>총 투자금</th><th>완료일</th><th>최종 평균단가</th><th>최종 목표 매도가</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>IVV</strong></td>
+            <td>$3,000.00</td>
+            <td>2023-11-30</td>
+            <td>$440.20</td>
+            <td>$484.22</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab active"><i data-lucide="calendar-check" style="width:20px;height:20px"></i>투자 계획</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 11·14</p>
+  <ul>
+    <li>트리거: 사이드바/탭 "투자 계획" 클릭</li>
+    <li>인터랙션: "새 계획" → 계획 생성 폼 / 계획 카드 클릭 → 계획 상세</li>
+    <li>전환: 계획 완료 시 "완료" 섹션으로 이동, SPY 재계획 가능 상태</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 8: 계획 생성 폼
+     시나리오: 11
+════════════════════════════════════════════ -->
+<div id="screen-8" class="screen" data-scenario="scenario-11">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item active"><i data-lucide="calendar-check" style="width:13px;height:13px"></i>투자 계획</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <div class="w-page-hd">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="w-btn w-btn-ghost" style="padding:4px"><i data-lucide="arrow-left" style="width:14px;height:14px"></i></button>
+        <span class="w-page-title">새 투자 계획</span>
+      </div>
+    </div>
+
+    <div style="max-width:420px">
+      <!-- 티커 -->
+      <div class="w-form-row">
+        <div class="w-label">티커 *</div>
+        <select class="w-select">
+          <option value="">티커 선택</option>
+          <option selected>SPY</option>
+          <option>QQQ</option>
+          <option>VOO</option>
+        </select>
+      </div>
+
+      <!-- 총 투자금 -->
+      <div class="w-form-row">
+        <div class="w-label">총 투자금 ($) *</div>
+        <input class="w-input" type="number" placeholder="0.00" value="4000">
+      </div>
+
+      <!-- 자동 계산 미리보기 -->
+      <div style="background:var(--w-fill);border-radius:6px;padding:12px;margin-bottom:16px">
+        <div class="w-section-hd" style="margin-bottom:8px">자동 계산</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div class="w-label">분할 횟수</div>
+            <div style="font-size:13px;font-weight:bold">40일</div>
+          </div>
+          <div>
+            <div class="w-label">일별 매수금액</div>
+            <div style="font-size:13px;font-weight:bold">$100.00</div>
+          </div>
+          <div>
+            <div class="w-label">목표 수익률</div>
+            <div style="font-size:13px;font-weight:bold">+10%</div>
+          </div>
+          <div>
+            <div class="w-label">시작일</div>
+            <div style="font-size:13px;font-weight:bold">오늘 (2024-01-15)</div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="w-divider">
+      <div style="display:flex;gap:8px">
+        <button class="w-btn">취소</button>
+        <button class="w-btn w-btn-primary">계획 생성</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab active"><i data-lucide="calendar-check" style="width:20px;height:20px"></i>투자 계획</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 11</p>
+  <ul>
+    <li>트리거: 계획 목록 "새 계획" 클릭</li>
+    <li>인터랙션: 총 투자금 입력 시 일별 매수금액($÷40) 실시간 계산·표시 / 분할 횟수(40)·목표수익률(10%)은 고정 표시</li>
+    <li>전환: "계획 생성" → 계획 상세 화면 / "취소" → 계획 목록</li>
+  </ul>
+</details></div>
+</div></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 9: 계획 상세 (일별 매수 + 목표 매도가)
+     시나리오: 12, 13
+════════════════════════════════════════════ -->
+<div id="screen-9" class="screen" data-scenario="scenario-12,scenario-13">
+<div class="screen-content max-w-5xl mx-auto p-6">
+<div class="w-shell">
+
+  <aside class="w-sidebar">
+    <div class="w-logo"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i><span style="font-size:13px;font-weight:bold">Henry Ledger</span></div>
+    <div class="w-nav-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px"></i>대시보드</div>
+    <div class="w-nav-item"><i data-lucide="list" style="width:13px;height:13px"></i>거래 내역</div>
+    <div class="w-nav-item active"><i data-lucide="calendar-check" style="width:13px;height:13px"></i>투자 계획</div>
+    <div class="w-nav-item"><i data-lucide="tag" style="width:13px;height:13px"></i>티커 관리</div>
+  </aside>
+
+  <main class="w-main">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <button class="w-btn w-btn-ghost" style="padding:4px"><i data-lucide="arrow-left" style="width:14px;height:14px"></i></button>
+      <span style="font-size:15px;font-weight:bold">SPY 투자 계획</span>
+      <span style="font-size:11px;color:var(--w-muted)">총 $4,000 · $100/일</span>
+    </div>
+
+    <!-- Summary + 목표 매도가 카드 -->
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+      <div class="w-card">
+        <div class="w-label">진행 상황</div>
+        <div style="font-size:15px;font-weight:bold">4 / 40일</div>
+        <div style="height:4px;background:var(--w-fill);border-radius:2px;margin-top:6px;overflow:hidden">
+          <div style="height:100%;width:10%;background:var(--w-text);border-radius:2px"></div>
+        </div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">잔여 투자금</div>
+        <div style="font-size:15px;font-weight:bold">$3,600.00</div>
+        <div style="font-size:11px;color:var(--w-muted);margin-top:2px">투자 완료 $400.00</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">계획 평균단가</div>
+        <div style="font-size:15px;font-weight:bold">$472.50</div>
+      </div>
+      <div class="w-card" style="border-color:#297a52">
+        <div class="w-label">목표 매도가 <span style="font-size:10px">(+10%)</span></div>
+        <div style="font-size:18px;font-weight:bold" class="w-pos">$519.75</div>
+        <div style="font-size:10px;color:var(--w-muted);margin-top:2px">증권사에 매도 주문 입력 기준</div>
+      </div>
+    </div>
+
+    <!-- 오늘의 매수 입력 -->
+    <div class="w-card" style="margin-bottom:16px;border-color:var(--w-text)">
+      <div class="w-section-hd">오늘의 매수 기록 — 5일차</div>
+      <div style="font-size:12px;color:var(--w-muted);margin-bottom:12px">오늘 목표 매수금액: <strong style="color:var(--w-text)">$100.00</strong></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <div class="w-label">매수 단가 ($) *</div>
+          <input class="w-input" type="number" placeholder="0.00" value="480.00">
+        </div>
+        <div>
+          <div class="w-label">수량 *</div>
+          <input class="w-input" type="number" placeholder="0.000" value="0.208">
+        </div>
+        <div>
+          <div class="w-label">수수료 ($)</div>
+          <input class="w-input" type="number" placeholder="0.00" value="2.50">
+        </div>
+        <div>
+          <div class="w-label">날짜</div>
+          <input class="w-input" type="date" value="2024-01-19">
+        </div>
+      </div>
+      <button class="w-btn w-btn-primary">매수 기록 저장</button>
+    </div>
+
+    <!-- 일별 기록 -->
+    <div class="w-card">
+      <div class="w-section-hd">일별 매수 기록</div>
+      <table class="w-table">
+        <thead><tr><th>일차</th><th>날짜</th><th>단가</th><th>수량</th><th>금액</th><th>누적 평균단가</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>4일차</td><td>2024-01-18</td><td>$480.00</td><td>0.208</td><td>$99.84</td>
+            <td><strong>$472.50</strong></td>
+          </tr>
+          <tr>
+            <td>3일차</td><td>2024-01-17</td><td>$475.00</td><td>0.210</td><td>$99.75</td>
+            <td>$471.00</td>
+          </tr>
+          <tr>
+            <td>2일차</td><td>2024-01-16</td><td>$468.00</td><td>0.213</td><td>$99.68</td>
+            <td>$470.00</td>
+          </tr>
+          <tr>
+            <td>1일차</td><td>2024-01-15</td><td>$472.00</td><td>0.212</td><td>$99.90</td>
+            <td>$472.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="w-bottom-nav">
+    <div class="w-tab"><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>대시보드</div>
+    <div class="w-tab"><i data-lucide="list" style="width:20px;height:20px"></i>거래 내역</div>
+    <div class="w-tab active"><i data-lucide="calendar-check" style="width:20px;height:20px"></i>투자 계획</div>
+    <div class="w-tab"><i data-lucide="tag" style="width:20px;height:20px"></i>티커 관리</div>
+  </div>
+</div>
+<div class="screen-notes"><details open><summary>Notes</summary>
+  <p>시나리오 12·13</p>
+  <ul>
+    <li>트리거: 계획 목록에서 SPY 카드 클릭</li>
+    <li>인터랙션: 매수 단가 입력 시 수량(=$100÷단가) 자동 계산 표시 / "매수 기록 저장" → 계획 평균단가·목표 매도가 즉시 갱신 + 거래 내역에도 추가</li>
+    <li>목표 매도가(초록 카드)가 가장 눈에 띄게 배치 — 매일 증권사 매도 주문 기준값</li>
+    <li>전환: 저장 후 이 화면 유지 (6일차 입력 준비 상태로 갱신)</li>
+  </ul>
+</details></div>
+</div></div>
+
+<script>
+var screenIds = [];
+function show(id) {
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('screen-'+id).classList.add('active');
+  document.querySelectorAll('nav button[id^="nav-"]').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('nav-'+id).classList.add('active');
+}
+function setViewport(mode) {
+  document.body.classList.remove('viewport-mobile','viewport-desktop');
+  document.body.classList.add('viewport-'+mode);
+  document.querySelectorAll('.vp-toggle button').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('vp-'+mode).classList.add('active');
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('nav button[id^="nav-"]').forEach(function(b){
+    screenIds.push(parseInt(b.id.replace('nav-','')));
+  });
+  var first = document.querySelector('nav button[id^="nav-"]');
+  if(first) first.click();
+  lucide.createIcons();
+});
+</script>
+</body>
+</html>
