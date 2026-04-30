@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { createClient } from '@libsql/client'
-import { setDb, initSchema } from '@/lib/db'
+import { setDb, initSchema, type DbClient } from '@/lib/db'
 import { addTicker } from './ticker'
 import {
   createPlan,
@@ -13,8 +13,8 @@ import {
 
 beforeEach(async () => {
   const db = createClient({ url: ':memory:' })
-  await initSchema(db)
-  setDb(db)
+  await initSchema(db as unknown as DbClient)
+  setDb(db as unknown as DbClient)
   await addTicker('AAPL')
   await addTicker('MSFT')
 })

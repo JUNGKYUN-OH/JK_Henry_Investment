@@ -1,10 +1,49 @@
-import { createClient, type Client } from '@libsql/client'
+import { neon } from '@neondatabase/serverless'
 
-declare global {
-  var __db: Client | undefined
+// Services call execute({ sql, args }) — this interface keeps them unchanged.
+export interface DbClient {
+  execute(stmt: string | { sql: string; args?: unknown[] }): Promise<{ rows: Record<string, unknown>[] }>
+  batch(stmts: (string | { sql: string })[], mode?: string): Promise<unknown>
 }
 
-export async function initSchema(db: Client): Promise<void> {
+declare global {
+  var __db: DbClient | undefined
+}
+
+function createNeonClient(): DbClient {
+  const neonFn = neon(process.env.DATABASE_URL!)
+  return {
+    async execute(stmt) {
+      const query = typeof stmt === 'string' ? stmt : stmt.sql
+      const args = (typeof stmt === 'string' ? [] : (stmt.args ?? [])) as unknown[]
+      // Convert SQLite-style ? placeholders to PostgreSQL $1, $2, ...
+      let i = 0
+      const pgQuery = query.replace(/\?/g, () => `$${++i}`)
+      const rows = (await neonFn(pgQuery, args)) as Record<string, unknown>[]
+      return { rows }
+    },
+    async batch(stmts) {
+      for (const s of stmts) {
+        const query = typeof s === 'string' ? s : s.sql
+        await neonFn(query, [])
+      }
+    },
+  }
+}
+
+export function getDb(): DbClient {
+  if (!global.__db) {
+    global.__db = createNeonClient()
+  }
+  return global.__db
+}
+
+export function setDb(db: DbClient): void {
+  global.__db = db
+}
+
+// Used only in test setup — SQLite syntax via @libsql/client :memory:
+export async function initSchema(db: DbClient): Promise<void> {
   await db.batch(
     [
       `CREATE TABLE IF NOT EXISTS tickers (
@@ -39,18 +78,4 @@ export async function initSchema(db: Client): Promise<void> {
     ],
     'write'
   )
-}
-
-export function getDb(): Client {
-  if (!global.__db) {
-    global.__db = createClient({
-      url: process.env.TURSO_DATABASE_URL!,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    })
-  }
-  return global.__db
-}
-
-export function setDb(db: Client): void {
-  global.__db = db
 }
