@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { getAllTickersWithCounts } from '@/services/ticker'
 import { getAllTransactions } from '@/services/transaction'
+import { getAllPlans } from '@/services/plan'
+import { getCachedPrices } from '@/services/price'
 import { TransactionForm } from '@/components/transactions/TransactionForm'
 import { TransactionList } from '@/components/transactions/TransactionList'
 import { createTransactionAction, deleteTransactionAction } from './actions'
@@ -8,6 +10,18 @@ import { createTransactionAction, deleteTransactionAction } from './actions'
 export default function TransactionsPage() {
   const tickers = getAllTickersWithCounts()
   const transactions = getAllTransactions()
+
+  const activePlans = getAllPlans().filter((p) => p.status === 'active')
+  const planMap: Record<string, { completedDays: number; dailyAmount: number }> = {}
+  for (const p of activePlans) {
+    planMap[p.tickerId] = { completedDays: p.completedDays, dailyAmount: p.dailyAmount }
+  }
+
+  const priceCache = getCachedPrices()
+  const priceMap: Record<string, number> = {}
+  for (const [tickerId, { price }] of priceCache.entries()) {
+    priceMap[tickerId] = price
+  }
 
   return (
     <div className="p-6 max-w-3xl">
@@ -24,7 +38,12 @@ export default function TransactionsPage() {
             하세요.
           </p>
         ) : (
-          <TransactionForm tickers={tickers} action={createTransactionAction} />
+          <TransactionForm
+            tickers={tickers}
+            action={createTransactionAction}
+            planMap={planMap}
+            priceMap={priceMap}
+          />
         )}
       </section>
 

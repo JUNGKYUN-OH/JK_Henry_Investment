@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -15,23 +15,54 @@ import {
 import type { TransactionFormState } from '@/app/transactions/actions'
 import type { TickerWithCount } from '@/services/ticker'
 import type { Transaction } from '@/types'
+import { usePlanAutoFill } from '@/hooks/usePlanAutoFill'
+import { formatUSD } from '@/lib/format'
 
 interface Props {
   tickers: TickerWithCount[]
   action: (prev: TransactionFormState, formData: FormData) => Promise<TransactionFormState>
   defaultValues?: Partial<Transaction>
   submitLabel?: string
+  planMap?: Record<string, { completedDays: number; dailyAmount: number }>
+  priceMap?: Record<string, number>
 }
 
-export function TransactionForm({ tickers, action, defaultValues, submitLabel = '저장' }: Props) {
+export function TransactionForm({
+  tickers,
+  action,
+  defaultValues,
+  submitLabel = '저장',
+  planMap = {},
+  priceMap = {},
+}: Props) {
   const [state, formAction, pending] = useActionState(action, {})
+  const [selectedTicker, setSelectedTicker] = useState(defaultValues?.tickerId ?? '')
+
+  const { banner, price, quantity, onPriceChange, onQuantityChange } = usePlanAutoFill(
+    selectedTicker,
+    planMap,
+    priceMap
+  )
+
+  const isEditMode = !!defaultValues?.id
 
   return (
     <form action={formAction} className="space-y-0">
+      {banner && !isEditMode && (
+        <div className="mb-4 text-sm px-3 py-2 rounded-md bg-blue-50 border border-blue-200 text-blue-700">
+          {banner.tickerId} 투자 계획 &middot; {banner.day}일차 &middot; 오늘 목표{' '}
+          {formatUSD(banner.dailyAmount)}
+        </div>
+      )}
+
       <FieldGroup>
         <Field data-invalid={!!state.errors?.tickerId || undefined}>
           <FieldLabel htmlFor="tickerId">종목</FieldLabel>
-          <Select name="tickerId" defaultValue={defaultValues?.tickerId}>
+          <Select
+            name="tickerId"
+            defaultValue={defaultValues?.tickerId}
+            onValueChange={(v) => setSelectedTicker(v)}
+          >
             <SelectTrigger id="tickerId" aria-invalid={!!state.errors?.tickerId}>
               <SelectValue placeholder="종목 선택" />
             </SelectTrigger>
@@ -85,7 +116,9 @@ export function TransactionForm({ tickers, action, defaultValues, submitLabel = 
             step="any"
             min="0"
             placeholder="0"
-            defaultValue={defaultValues?.quantity}
+            value={isEditMode ? undefined : quantity}
+            defaultValue={isEditMode ? defaultValues?.quantity : undefined}
+            onChange={isEditMode ? undefined : (e) => onQuantityChange(e.target.value)}
             aria-invalid={!!state.errors?.quantity}
           />
           {state.errors?.quantity && <FieldError>{state.errors.quantity}</FieldError>}
@@ -100,7 +133,9 @@ export function TransactionForm({ tickers, action, defaultValues, submitLabel = 
             step="any"
             min="0"
             placeholder="0.00"
-            defaultValue={defaultValues?.price}
+            value={isEditMode ? undefined : price}
+            defaultValue={isEditMode ? defaultValues?.price : undefined}
+            onChange={isEditMode ? undefined : (e) => onPriceChange(e.target.value)}
             aria-invalid={!!state.errors?.price}
           />
           {state.errors?.price && <FieldError>{state.errors.price}</FieldError>}
