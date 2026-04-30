@@ -43,7 +43,7 @@ export function usePlanAutoFill(
       const priceStr = String(cachedPrice)
       const qty = plan.dailyAmount / cachedPrice
       setPrice(priceStr)
-      setQuantity(String(Math.round(qty * 1000) / 1000))
+      setQuantity(String(Math.round(qty)))
     } else {
       setPrice('')
       setQuantity('')
@@ -56,7 +56,7 @@ export function usePlanAutoFill(
       const plan = planMap[selectedTicker]
       const p = parseFloat(value)
       if (plan && !isNaN(p) && p > 0) {
-        setQuantity(String(Math.round((plan.dailyAmount / p) * 1000) / 1000))
+        setQuantity(String(Math.round(plan.dailyAmount / p)))
       }
     }
   }
