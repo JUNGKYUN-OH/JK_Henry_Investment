@@ -82,7 +82,7 @@ export function TodayTaskList({
               <div className="flex items-center gap-2">
                 <span className="font-medium text-sm">{plan.tickerId}</span>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                    {Math.round(plan.totalAmount - plan.remainingAmount)}/{Math.round(plan.totalAmount)}
+                    {plan.dailyAmount > 0 ? Math.round((plan.totalAmount - plan.remainingAmount) / plan.dailyAmount) : 0}/{plan.splits}
                   </span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">

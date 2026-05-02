@@ -62,6 +62,7 @@ export function PlanList({ plans }: Props) {
 
 function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
   const usedAmount = plan.totalAmount - plan.remainingAmount
+  const completedSplits = plan.dailyAmount > 0 ? Math.round(usedAmount / plan.dailyAmount) : 0
   const pct = Math.min(100, (usedAmount / plan.totalAmount) * 100)
 
   return (
@@ -74,7 +75,7 @@ function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
           )}
         </div>
         <span className="text-sm text-muted-foreground tabular-nums">
-          {Math.round(usedAmount)} / {Math.round(plan.totalAmount)}
+          {completedSplits} / {plan.splits}
         </span>
       </div>
 
