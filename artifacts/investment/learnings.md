@@ -81,3 +81,88 @@
 - `feedback_action_parity.md` — create/update actions must mirror validations
 - `feedback_financial_formula_tests.md` — off-target input scenarios required
 - `feedback_shadcn_self_check.md` — scan for native form elements before committing
+
+---
+
+# Learnings — redesign phase (무한매수법)
+
+## What Changed
+
+Redesigned plan flows: dedicated buy/sell pages, fee-rate on plan level, edit transaction, `splits`/`targetReturn`/`feeRate` DB columns, tiered sell signals, home screen TodayTaskList, progress display as `completedSplits / splits`.
+
+## Decisions & Pivots
+
+### DB migration chain: SQLite → Turso → Vercel Postgres
+Three consecutive DB switches across the project. Final stack is `@neondatabase/serverless` (Vercel Postgres).  
+**Why:** better-sqlite3 can't run in Next.js edge/serverless; Turso added latency and auth friction; Neon integrates directly with Vercel Postgres.  
+**Lesson:** Lock the DB driver before designing services. The `DbClient` interface abstraction (`execute` / `batch`) made swapping drivers cheap — only `lib/db.ts` changed each time.
+
+### `computeSellSignal` extracted to `lib/sellSignal.ts`
+`services/plan.ts` imports the DB client. `SellBanner.tsx` is a client component that needed `computeSellSignal`. Importing from `services/plan.ts` dragged the DB client into the browser bundle.  
+**Fix:** Extracted the pure function to `lib/sellSignal.ts` (no DB import). `services/plan.ts` re-exports it for convenience.  
+**Rule:** Pure domain logic used in client components must live in `lib/`, not `services/`.
+
+### Fee model: plan-level feeRate, buy fee always 0
+Original design had per-transaction fee input. User clarified: buy has no fee; sell fee = `price × qty × feeRate` from the plan.  
+**Impact:** Removed fee field from buy form, removed fee field from sell form, added `fee_rate` column to plans. `recordSellAction` reads `plan.feeRate` and computes fee server-side.  
+**Lesson:** Financial business rules (who pays fee, when, how much) must be confirmed before UI is built — they touch every layer.
+
+### UTC vs KST date bug
+Server computes `today` as UTC string. Between midnight and 09:00 KST, the server returns yesterday's date, causing today's buy form to pre-fill the wrong date.  
+**Fix:** Move `today` to client side: `new Date().toLocaleDateString('en-CA')`.  
+**Rule:** User-facing "today" dates must be computed client-side with locale formatting. Never rely on server UTC for date defaults.
+
+### Oversell guard placement
+`recordSell` inserted the transaction row before checking `data.quantity > plan.holdingQty`. If the guard failed the row was already written.  
+**Fix:** Moved guard before the INSERT.  
+**Rule:** Validate before mutating. All quantity/balance guards belong at the top of the function, not after DB writes.
+
+### `isDuplicateDate` excludeTxId for edit flow
+Edit transaction needed to check for duplicate dates while excluding the transaction being edited itself.  
+**Fix:** Added optional `excludeTxId` parameter to `isDuplicateDate`. Same pattern as Task 5's oversell guard — create/update must mirror the same validations.  
+**applied: rule** — aligns with `feedback_action_parity.md`
+
+### TOCTOU duplicate check removal
+`recordBuyAction` called `isDuplicateDate` then `recordDailyEntry` which also calls it internally. Outer check was redundant and created TOCTOU window.  
+**Fix:** Removed outer call; rely solely on the inner check inside `recordDailyEntry`.
+
+### Progress display: three misunderstandings
+User asked for "X/40" progress. First attempt used `formatUSD` (showed `$20.00 / $40.00`). Second attempt used `Math.round(dollars)` (showed `3000 / 20000`). Third attempt was correct: `completedSplits = Math.round(usedAmount / dailyAmount)` → shows `6/40`.  
+**Lesson:** When a display format question involves derived numbers, confirm the formula with a concrete example before implementing. "X/40" is ambiguous — it could be buy count, dollar amount, or dollar-to-split ratio.
+
+### Label accuracy: "분할 횟수(일)" → "분할 횟수"
+Original label implied one split per day. User clarified multiple buys can happen on the same day.  
+**Lesson:** Domain label accuracy matters early. Rename the column/label at spec time, not after implementation.
+
+## Code Review Findings Applied (redesign phase)
+
+| Severity | Finding | Status |
+|---|---|---|
+| Critical | `computeSellSignal` in client bundle via services/plan.ts DB import | Fixed — extracted to lib/sellSignal.ts |
+| Critical | Oversell guard after INSERT | Fixed — moved before INSERT |
+| Important | `isDuplicateDate` no excludeTxId in edit action | Fixed |
+| Important | Redundant outer TOCTOU duplicate check | Fixed |
+| Important | `holdingQty` missing from PlanWithProgress type | Fixed — committed to types/index.ts |
+
+## What Worked Well
+
+1. **`DbClient` interface abstraction** — swapped DB drivers three times with zero service-layer changes.
+2. **Dedicated buy/sell pages (RSC + SA)** — clean separation; each page owns its own action file. No shared mutation logic to untangle.
+3. **Vertical slice per feature** — buy flow, sell flow, edit flow each landed as independent, testable units.
+
+## What Didn't Work
+
+1. **Formula confirmation before coding** — progress display required three iterations. A concrete "given $3000 spent of $20000 total with $500/split, show 6/40" example would have avoided two wrong implementations.
+2. **DB column missing from migration** — `splits` column added to initSchema but ALTER TABLE not in `/api/migrate`. Caught only after Vercel deploy. Migration endpoint and initSchema must be kept in sync.
+3. **Type missing from committed file** — `holdingQty` added locally, masked by `.next` cache, only caught at Vercel build. Lesson: always verify `git diff` includes all local type changes before pushing.
+
+## Insights for Next Feature
+
+- For any display format involving a calculated number, ask for one concrete example (input → output) before writing code.
+- Keep `/api/migrate` ALTER TABLE statements in sync with `initSchema` in `lib/db.ts` — they are two representations of the same schema.
+- When a pure function is needed by a client component, put it in `lib/` from the start. Moving it later costs a refactor commit.
+
+## Promoted Rules (applied: not-yet)
+
+- Formula display format: confirm with concrete example before implementing
+- Migration/initSchema sync: ALTER TABLE in `/api/migrate` must mirror `lib/db.ts` initSchema
