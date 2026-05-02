@@ -8,7 +8,8 @@ interface Props {
 }
 
 export function PlanDetail({ plan, totalFee }: Props) {
-  const pct = Math.min(100, (plan.completedDays / plan.splits) * 100)
+  const usedAmount = plan.totalAmount - plan.remainingAmount
+  const pct = Math.min(100, (usedAmount / plan.totalAmount) * 100)
   const isActive = plan.status === 'active'
   const halfN = plan.splits / 2
 
@@ -37,7 +38,7 @@ export function PlanDetail({ plan, totalFee }: Props) {
       <section>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-sm text-muted-foreground">진행률</span>
-          <span className="text-sm font-medium tabular-nums">{plan.completedDays} / {plan.splits}</span>
+          <span className="text-sm font-medium tabular-nums">{formatUSD(usedAmount)} / {formatUSD(plan.totalAmount)}</span>
         </div>
         <div className="h-2.5 bg-muted rounded-full overflow-hidden">
           <div

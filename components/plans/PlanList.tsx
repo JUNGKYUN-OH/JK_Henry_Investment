@@ -45,7 +45,8 @@ export function PlanList({ plans }: Props) {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{plan.tickerId}</span>
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {plan.startDate} — {plan.completedDays}/{plan.splits}                  </span>
+                    {plan.startDate}
+                  </span>
                 </div>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {formatUSD(plan.totalAmount)}
@@ -60,7 +61,8 @@ export function PlanList({ plans }: Props) {
 }
 
 function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
-  const pct = Math.min(100, (plan.completedDays / plan.splits) * 100)
+  const usedAmount = plan.totalAmount - plan.remainingAmount
+  const pct = Math.min(100, (usedAmount / plan.totalAmount) * 100)
 
   return (
     <Link href={`/plans/${plan.id}`} className="block border rounded-lg p-4 hover:bg-muted/30 transition-colors">
@@ -72,7 +74,8 @@ function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
           )}
         </div>
         <span className="text-sm text-muted-foreground tabular-nums">
-          {plan.completedDays} / {plan.splits}        </span>
+          {formatUSD(usedAmount)} / {formatUSD(plan.totalAmount)}
+        </span>
       </div>
 
       <div className="h-2 bg-muted rounded-full overflow-hidden mb-3">
