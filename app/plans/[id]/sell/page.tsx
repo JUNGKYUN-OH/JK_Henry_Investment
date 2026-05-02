@@ -29,7 +29,7 @@ export default async function SellPage({ params }: { params: Promise<{ id: strin
         </Link>
       </div>
 
-      <h1 className="text-lg font-semibold mb-6">매도 확인</h1>
+      <h1 className="text-lg font-semibold mb-6">매도 결과 입력</h1>
 
       <SellConfirmForm
         planId={plan.id}

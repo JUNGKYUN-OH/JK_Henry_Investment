@@ -23,7 +23,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
         </Link>
       </div>
 
-      <h1 className="text-lg font-semibold mb-6">매수 확인</h1>
+      <h1 className="text-lg font-semibold mb-6">매수 결과 입력</h1>
 
       <BuyConfirmForm
         planId={plan.id}

@@ -46,7 +46,6 @@ export function TodayTaskList({
         const done = todayBoughtPlanIds.includes(plan.id)
         const priceInfo = prices[plan.tickerId]
         const currentPrice = priceInfo?.price
-        const estQty = currentPrice ? plan.dailyAmount / currentPrice : null
 
         // % to target (only for ≤ N/2)
         const showTargetPct =
@@ -96,11 +95,6 @@ export function TodayTaskList({
                     <span className="text-xs text-muted-foreground tabular-nums">
                       {formatUSD(currentPrice)}
                     </span>
-                    {estQty != null && (
-                      <span className="text-xs text-muted-foreground">
-                        예상 {Math.round(estQty)}주
-                      </span>
-                    )}
                     {targetPct != null && (
                       <span className="text-xs text-muted-foreground">
                         목표까지 {targetPct >= 0 ? '+' : ''}{targetPct.toFixed(1)}%
