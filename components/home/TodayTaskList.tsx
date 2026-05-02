@@ -81,7 +81,7 @@ export function TodayTaskList({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-sm">{plan.tickerId}</span>
-                <span className="text-xs text-muted-foreground">{plan.completedDays}/{plan.splits}일</span>
+                <span className="text-xs text-muted-foreground">{plan.completedDays}/{plan.splits}</span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 {loading ? (

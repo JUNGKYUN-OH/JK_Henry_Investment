@@ -45,8 +45,7 @@ export function PlanList({ plans }: Props) {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{plan.tickerId}</span>
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {plan.startDate} — {plan.completedDays}/{plan.splits}일
-                  </span>
+                    {plan.startDate} — {plan.completedDays}/{plan.splits}                  </span>
                 </div>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {formatUSD(plan.totalAmount)}
@@ -73,8 +72,7 @@ function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
           )}
         </div>
         <span className="text-sm text-muted-foreground tabular-nums">
-          {plan.completedDays} / {plan.splits}일
-        </span>
+          {plan.completedDays} / {plan.splits}        </span>
       </div>
 
       <div className="h-2 bg-muted rounded-full overflow-hidden mb-3">
