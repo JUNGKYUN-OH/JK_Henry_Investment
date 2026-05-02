@@ -2,7 +2,11 @@
   "crons": [
     {
       "path": "/api/warmup",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/warmup",
+      "schedule": "0 12 * * *"
     }
   ]
 }
