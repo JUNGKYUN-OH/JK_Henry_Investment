@@ -172,9 +172,6 @@ export async function createPlan(
   targetReturn = 0.1,
   feeRate = 0.0025
 ): Promise<Plan> {
-  const existing = await getActivePlanByTicker(tickerId)
-  if (existing) throw new Error(`Active plan already exists for ${tickerId}`)
-
   const id = crypto.randomUUID()
   const dailyAmount = totalAmount / splits
   const startDate = new Date().toISOString().slice(0, 10)

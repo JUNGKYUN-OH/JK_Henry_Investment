@@ -43,10 +43,7 @@ export function PlanList({ plans }: Props) {
                 className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/30 transition-colors text-sm"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{plan.tickerId}</span>
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {plan.startDate}
-                  </span>
+                  <span className="font-medium">{plan.tickerId}({plan.startDate})</span>
                 </div>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {formatUSD(plan.totalAmount)}
@@ -69,7 +66,7 @@ function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
     <Link href={`/plans/${plan.id}`} className="block border rounded-lg p-4 hover:bg-muted/30 transition-colors">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="font-mono font-medium">{plan.tickerId}</span>
+          <span className="font-mono font-medium">{plan.tickerId}({plan.startDate})</span>
           {plan.firstSellCompleted && (
             <Badge variant="secondary" className="text-xs">1차 완료</Badge>
           )}

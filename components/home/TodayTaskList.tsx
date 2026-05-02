@@ -65,7 +65,7 @@ export function TodayTaskList({
               className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 text-muted-foreground"
             >
               <CheckCircle2 className="size-4 shrink-0 text-green-600" />
-              <span className="font-medium text-sm">{plan.tickerId}</span>
+              <span className="font-medium text-sm">{plan.tickerId}({plan.startDate})</span>
               <Badge variant="secondary" className="ml-auto text-xs">오늘 완료</Badge>
             </div>
           )
@@ -80,7 +80,7 @@ export function TodayTaskList({
             <Circle className="size-4 shrink-0 text-muted-foreground" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-sm">{plan.tickerId}</span>
+                <span className="font-medium text-sm">{plan.tickerId}({plan.startDate})</span>
                 <span className="text-xs text-muted-foreground tabular-nums">
                     {plan.dailyAmount > 0 ? Math.round((plan.totalAmount - plan.remainingAmount) / plan.dailyAmount) : 0}/{plan.splits}
                   </span>
