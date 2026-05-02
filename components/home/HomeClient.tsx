@@ -6,14 +6,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { SellBanner } from './SellBanner'
 import { TodayTaskList } from './TodayTaskList'
-import { PortfolioSummary } from './PortfolioSummary'
-import type { PlanWithProgress, Holding } from '@/types'
+import { PlanList } from '@/components/plans/PlanList'
+import type { PlanWithProgress } from '@/types'
 
 type PriceMap = Record<string, { price: number; fetchedAt: string }>
 
 interface HomeData {
   activePlans: PlanWithProgress[]
-  holdings: Holding[]
   cachedPrices: PriceMap
   todayBoughtPlanIds: string[]
   today: string
@@ -27,7 +26,7 @@ interface PriceResult {
 }
 
 export function HomeClient({ initialData }: { initialData: HomeData }) {
-  const { activePlans, holdings, cachedPrices, todayBoughtPlanIds, isTodayTradingDay } = initialData
+  const { activePlans, cachedPrices, todayBoughtPlanIds, isTodayTradingDay } = initialData
 
   const [prices, setPrices] = useState<PriceMap>(cachedPrices)
   const [loading, setLoading] = useState(true)
@@ -56,16 +55,6 @@ export function HomeClient({ initialData }: { initialData: HomeData }) {
       })
     return () => { cancelled = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Portfolio summary from holdings + current prices
-  const totalCost = holdings.reduce((acc, h) => acc + h.totalCost, 0)
-  const marketValue = holdings.length > 0
-    ? holdings.reduce((acc, h) => {
-        const p = prices[h.tickerId]?.price
-        return p != null ? acc + p * h.quantity : acc + h.totalCost
-      }, 0)
-    : null
-  const unrealizedPnl = marketValue != null ? marketValue - totalCost : null
 
   return (
     <div className="flex flex-col gap-6 p-4 max-w-lg mx-auto">
@@ -104,23 +93,11 @@ export function HomeClient({ initialData }: { initialData: HomeData }) {
         )}
       </section>
 
-      {/* Portfolio summary */}
-      {holdings.length > 0 && (
+      {/* Active plans */}
+      {activePlans.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold mb-3">포트폴리오</h2>
-          {loading ? (
-            <div className="grid grid-cols-2 gap-3">
-              <Skeleton className="h-16 rounded-lg" />
-              <Skeleton className="h-16 rounded-lg" />
-              <Skeleton className="h-16 rounded-lg col-span-2" />
-            </div>
-          ) : (
-            <PortfolioSummary
-              totalCost={totalCost}
-              marketValue={marketValue}
-              unrealizedPnl={unrealizedPnl}
-            />
-          )}
+          <h2 className="text-sm font-semibold mb-3">진행 중인 계획</h2>
+          <PlanList plans={activePlans} />
         </section>
       )}
     </div>

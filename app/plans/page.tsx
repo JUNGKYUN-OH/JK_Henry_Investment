@@ -3,10 +3,26 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PlanList } from '@/components/plans/PlanList'
+import { PortfolioSummary } from '@/components/home/PortfolioSummary'
 import { getAllPlans } from '@/services/plan'
+import { calcActiveHoldings } from '@/services/portfolio'
+import { getCachedPrices } from '@/services/price'
 
 export default async function PlansPage() {
-  const plans = await getAllPlans()
+  const [plans, holdings, cachedPricesMap] = await Promise.all([
+    getAllPlans(),
+    calcActiveHoldings(),
+    getCachedPrices(),
+  ])
+
+  const totalCost = holdings.reduce((acc, h) => acc + h.totalCost, 0)
+  const marketValue = holdings.length > 0
+    ? holdings.reduce((acc, h) => {
+        const p = cachedPricesMap.get(h.tickerId)?.price
+        return p != null ? acc + p * h.quantity : acc + h.totalCost
+      }, 0)
+    : null
+  const unrealizedPnl = marketValue != null ? marketValue - totalCost : null
 
   return (
     <div className="p-6 max-w-3xl">
@@ -16,6 +32,17 @@ export default async function PlansPage() {
           <Link href="/plans/new">+ 새 계획</Link>
         </Button>
       </div>
+
+      {holdings.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold mb-3">포트폴리오</h2>
+          <PortfolioSummary
+            totalCost={totalCost}
+            marketValue={marketValue}
+            unrealizedPnl={unrealizedPnl}
+          />
+        </section>
+      )}
 
       <PlanList plans={plans} />
     </div>
