@@ -21,7 +21,7 @@ export async function createPlanAction(
   const totalAmount = totalAmountRaw ? parseFloat(totalAmountRaw) : NaN
   const splits = splitsRaw ? parseInt(splitsRaw, 10) : 40
   const targetReturn = targetReturnRaw ? parseFloat(targetReturnRaw) / 100 : 0.1
-  const feeRate = feeRateRaw ? parseFloat(feeRateRaw) / 100 : 0
+  const feeRate = feeRateRaw ? parseFloat(feeRateRaw) / 100 : 0.0025
 
   if (!tickerId) return { error: '종목을 선택하세요.' }
   if (isNaN(totalAmount) || totalAmount <= 0) return { error: '총 투자금액을 입력하세요.' }

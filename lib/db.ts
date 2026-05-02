@@ -57,7 +57,7 @@ export async function initSchema(db: DbClient): Promise<void> {
         daily_amount REAL NOT NULL CHECK (daily_amount > 0),
         splits INTEGER NOT NULL DEFAULT 40,
         target_return REAL NOT NULL DEFAULT 0.10,
-        fee_rate REAL NOT NULL DEFAULT 0.0,
+        fee_rate REAL NOT NULL DEFAULT 0.0025,
         status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')),
         start_date TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))

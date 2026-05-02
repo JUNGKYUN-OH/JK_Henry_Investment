@@ -108,8 +108,8 @@ export function PlanNewForm({ tickers, action }: Props) {
             type="number"
             step="any"
             min="0"
-            placeholder="예: 0.1"
-            defaultValue="0"
+            placeholder="예: 0.25"
+            defaultValue="0.25"
           />
           <FieldDescription>매도 시 자동 적용 (기본값: 0%)</FieldDescription>
         </Field>

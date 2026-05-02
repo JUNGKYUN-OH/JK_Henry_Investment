@@ -170,7 +170,7 @@ export async function createPlan(
   totalAmount: number,
   splits = 40,
   targetReturn = 0.1,
-  feeRate = 0
+  feeRate = 0.0025
 ): Promise<Plan> {
   const existing = await getActivePlanByTicker(tickerId)
   if (existing) throw new Error(`Active plan already exists for ${tickerId}`)
