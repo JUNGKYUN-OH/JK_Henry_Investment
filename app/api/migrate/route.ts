@@ -39,8 +39,10 @@ export async function POST(request: NextRequest) {
         price REAL NOT NULL,
         fetched_at TEXT NOT NULL
       )`,
+      `ALTER TABLE plans ADD COLUMN IF NOT EXISTS splits INTEGER NOT NULL DEFAULT 40`,
+      `ALTER TABLE plans ADD COLUMN IF NOT EXISTS target_return REAL NOT NULL DEFAULT 0.10`,
     ])
-    return NextResponse.json({ ok: true, message: 'Schema created successfully' })
+    return NextResponse.json({ ok: true, message: 'Schema migrated successfully' })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
