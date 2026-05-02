@@ -82,14 +82,14 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
                 <div>
                   <span className="font-mono text-sm font-medium">{ticker.id}</span>
                   <span className="ml-2 text-xs text-muted-foreground">
-                    거래 {ticker.transactionCount}건
+                    계획 {ticker.planCount}건
                   </span>
                 </div>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDeleteClick(ticker.id, ticker.transactionCount > 0)}
+                  onClick={() => handleDeleteClick(ticker.id, ticker.planCount > 0)}
                 >
                   삭제
                 </Button>

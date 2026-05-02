@@ -2,7 +2,7 @@ import { getDb } from '@/lib/db'
 import type { Ticker } from '@/types'
 
 export interface TickerWithCount extends Ticker {
-  transactionCount: number
+  planCount: number
 }
 
 function rowToTicker(row: { id: string; created_at: string }): Ticker {
@@ -16,17 +16,17 @@ export async function getAllTickers(): Promise<Ticker[]> {
 
 export async function getAllTickersWithCounts(): Promise<TickerWithCount[]> {
   const { rows } = await getDb().execute(
-    `SELECT t.id, t.created_at, COUNT(tx.id) as transaction_count
+    `SELECT t.id, t.created_at, COUNT(p.id) as plan_count
      FROM tickers t
-     LEFT JOIN transactions tx ON t.id = tx.ticker_id
+     LEFT JOIN plans p ON t.id = p.ticker_id
      GROUP BY t.id
      ORDER BY t.id`
   )
-  return (rows as unknown as { id: string; created_at: string; transaction_count: number }[]).map(
+  return (rows as unknown as { id: string; created_at: string; plan_count: number }[]).map(
     (row) => ({
       id: row.id,
       createdAt: row.created_at,
-      transactionCount: Number(row.transaction_count),
+      planCount: Number(row.plan_count),
     })
   )
 }
