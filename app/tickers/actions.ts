@@ -18,7 +18,22 @@ export async function addTickerAction(
     return { error: '유효하지 않은 티커 형식입니다.' }
   if (await tickerExists(id)) return { error: '이미 등록된 티커입니다.' }
 
-  await addTicker(id)
+  let name: string | null = null
+  let exchange: string | null = null
+
+  try {
+    const YahooFinance = (await import('yahoo-finance2')).default
+    const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] } as never)
+    const quote = await yf.quote(id, { fields: ['shortName', 'exchange', 'regularMarketPrice'] as never[] })
+    const q = quote as { shortName?: string; exchange?: string; regularMarketPrice?: number }
+    if (!q.regularMarketPrice) return { error: `'${id}'를 Yahoo Finance에서 찾을 수 없습니다.` }
+    name = q.shortName ?? null
+    exchange = q.exchange ?? null
+  } catch {
+    return { error: `'${id}'는 유효하지 않은 티커입니다.` }
+  }
+
+  await addTicker(id, { name, exchange })
   revalidatePath('/tickers')
   return {}
 }
@@ -34,6 +49,5 @@ export async function deleteTickerAction(
 
   await deleteTicker(id)
   revalidatePath('/tickers')
-  revalidatePath('/transactions')
   return {}
 }

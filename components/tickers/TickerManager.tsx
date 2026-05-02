@@ -79,17 +79,25 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
           <ul className="divide-y border rounded-md">
             {tickers.map((ticker) => (
               <li key={ticker.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <span className="font-mono text-sm font-medium">{ticker.id}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    계획 {ticker.planCount}건
-                  </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-medium">{ticker.id}</span>
+                    {ticker.exchange && (
+                      <span className="text-xs text-muted-foreground">{ticker.exchange}</span>
+                    )}
+                  </div>
+                  {ticker.name && (
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{ticker.name}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    진행 중 {ticker.activePlanCount}건 · 완료 {ticker.completedPlanCount}건
+                  </p>
                 </div>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDeleteClick(ticker.id, ticker.planCount > 0)}
+                  onClick={() => handleDeleteClick(ticker.id, ticker.activePlanCount + ticker.completedPlanCount > 0)}
                 >
                   삭제
                 </Button>

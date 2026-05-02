@@ -48,6 +48,8 @@ export async function initSchema(db: DbClient): Promise<void> {
     [
       `CREATE TABLE IF NOT EXISTS tickers (
         id TEXT PRIMARY KEY,
+        name TEXT,
+        exchange TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE IF NOT EXISTS plans (

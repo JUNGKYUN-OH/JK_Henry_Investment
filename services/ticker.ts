@@ -2,7 +2,10 @@ import { getDb } from '@/lib/db'
 import type { Ticker } from '@/types'
 
 export interface TickerWithCount extends Ticker {
-  planCount: number
+  name: string | null
+  exchange: string | null
+  activePlanCount: number
+  completedPlanCount: number
 }
 
 function rowToTicker(row: { id: string; created_at: string }): Ticker {
@@ -16,19 +19,25 @@ export async function getAllTickers(): Promise<Ticker[]> {
 
 export async function getAllTickersWithCounts(): Promise<TickerWithCount[]> {
   const { rows } = await getDb().execute(
-    `SELECT t.id, t.created_at, COUNT(p.id) as plan_count
+    `SELECT t.id, t.name, t.exchange, t.created_at,
+       COUNT(CASE WHEN p.status = 'active' THEN 1 END) AS active_plan_count,
+       COUNT(CASE WHEN p.status = 'completed' THEN 1 END) AS completed_plan_count
      FROM tickers t
      LEFT JOIN plans p ON t.id = p.ticker_id
      GROUP BY t.id
      ORDER BY t.id`
   )
-  return (rows as unknown as { id: string; created_at: string; plan_count: number }[]).map(
-    (row) => ({
-      id: row.id,
-      createdAt: row.created_at,
-      planCount: Number(row.plan_count),
-    })
-  )
+  return (rows as unknown as {
+    id: string; name: string | null; exchange: string | null; created_at: string
+    active_plan_count: number; completed_plan_count: number
+  }[]).map((row) => ({
+    id: row.id,
+    name: row.name ?? null,
+    exchange: row.exchange ?? null,
+    createdAt: row.created_at,
+    activePlanCount: Number(row.active_plan_count),
+    completedPlanCount: Number(row.completed_plan_count),
+  }))
 }
 
 export async function tickerExists(id: string): Promise<boolean> {
@@ -47,10 +56,13 @@ export async function hasTransactions(tickerId: string): Promise<boolean> {
   return rows.length > 0
 }
 
-export async function addTicker(id: string): Promise<void> {
+export async function addTicker(
+  id: string,
+  info?: { name?: string | null; exchange?: string | null }
+): Promise<void> {
   await getDb().execute({
-    sql: 'INSERT INTO tickers (id) VALUES (?)',
-    args: [id.toUpperCase().trim()],
+    sql: 'INSERT INTO tickers (id, name, exchange) VALUES (?, ?, ?)',
+    args: [id.toUpperCase().trim(), info?.name ?? null, info?.exchange ?? null],
   })
 }
 
