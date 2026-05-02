@@ -69,8 +69,7 @@ export async function addTicker(
 }
 
 export async function deleteTicker(id: string): Promise<void> {
-  await getDb().execute({
-    sql: 'DELETE FROM tickers WHERE id = ?',
-    args: [id],
-  })
+  const db = getDb()
+  await db.execute({ sql: 'DELETE FROM price_cache WHERE ticker_id = ?', args: [id] })
+  await db.execute({ sql: 'DELETE FROM tickers WHERE id = ?', args: [id] })
 }
