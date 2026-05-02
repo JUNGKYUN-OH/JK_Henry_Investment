@@ -89,7 +89,10 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
                   {ticker.name && (
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{ticker.name}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  {ticker.description && (
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{ticker.description}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
                     진행 중 {ticker.activePlanCount}건 · 완료 {ticker.completedPlanCount}건
                   </p>
                 </div>

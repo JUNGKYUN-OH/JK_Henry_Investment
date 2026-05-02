@@ -20,20 +20,37 @@ export async function addTickerAction(
 
   let name: string | null = null
   let exchange: string | null = null
+  let description: string | null = null
 
   try {
     const YahooFinance = (await import('yahoo-finance2')).default
     const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] } as never)
-    const quote = await yf.quote(id, { fields: ['shortName', 'exchange', 'regularMarketPrice'] as never[] })
+
+    const [quote, summary] = await Promise.all([
+      yf.quote(id, { fields: ['shortName', 'exchange', 'regularMarketPrice'] as never[] }),
+      yf.quoteSummary(id, { modules: ['assetProfile'] as never[] }).catch(() => null),
+    ])
+
     const q = quote as { shortName?: string; exchange?: string; regularMarketPrice?: number }
     if (!q.regularMarketPrice) return { error: `'${id}'를 Yahoo Finance에서 찾을 수 없습니다.` }
+
     name = q.shortName ?? null
     exchange = q.exchange ?? null
+
+    const raw = (summary as { assetProfile?: { longBusinessSummary?: string } } | null)
+      ?.assetProfile?.longBusinessSummary ?? null
+    if (raw) {
+      // 첫 2문장 또는 최대 100자
+      const twoSentences = raw.match(/[^.!?]+[.!?]+/g)?.slice(0, 2).join(' ') ?? raw
+      description = twoSentences.length > 100
+        ? twoSentences.slice(0, twoSentences.lastIndexOf(' ', 100)) + '...'
+        : twoSentences
+    }
   } catch {
     return { error: `'${id}'는 유효하지 않은 티커입니다.` }
   }
 
-  await addTicker(id, { name, exchange })
+  await addTicker(id, { name, exchange, description })
   revalidatePath('/tickers')
   return {}
 }

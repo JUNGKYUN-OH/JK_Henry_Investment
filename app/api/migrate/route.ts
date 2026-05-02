@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       `ALTER TABLE plans ADD COLUMN IF NOT EXISTS fee_rate REAL NOT NULL DEFAULT 0.0025`,
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS name TEXT`,
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS exchange TEXT`,
+      `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS description TEXT`,
     ])
     return NextResponse.json({ ok: true, message: 'Schema migrated successfully' })
   } catch (err) {

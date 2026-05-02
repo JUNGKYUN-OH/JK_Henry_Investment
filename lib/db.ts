@@ -50,6 +50,7 @@ export async function initSchema(db: DbClient): Promise<void> {
         id TEXT PRIMARY KEY,
         name TEXT,
         exchange TEXT,
+        description TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE IF NOT EXISTS plans (

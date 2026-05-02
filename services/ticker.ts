@@ -4,6 +4,7 @@ import type { Ticker } from '@/types'
 export interface TickerWithCount extends Ticker {
   name: string | null
   exchange: string | null
+  description: string | null
   activePlanCount: number
   completedPlanCount: number
 }
@@ -19,7 +20,7 @@ export async function getAllTickers(): Promise<Ticker[]> {
 
 export async function getAllTickersWithCounts(): Promise<TickerWithCount[]> {
   const { rows } = await getDb().execute(
-    `SELECT t.id, t.name, t.exchange, t.created_at,
+    `SELECT t.id, t.name, t.exchange, t.description, t.created_at,
        COUNT(CASE WHEN p.status = 'active' THEN 1 END) AS active_plan_count,
        COUNT(CASE WHEN p.status = 'completed' THEN 1 END) AS completed_plan_count
      FROM tickers t
@@ -28,12 +29,13 @@ export async function getAllTickersWithCounts(): Promise<TickerWithCount[]> {
      ORDER BY t.id`
   )
   return (rows as unknown as {
-    id: string; name: string | null; exchange: string | null; created_at: string
-    active_plan_count: number; completed_plan_count: number
+    id: string; name: string | null; exchange: string | null; description: string | null
+    created_at: string; active_plan_count: number; completed_plan_count: number
   }[]).map((row) => ({
     id: row.id,
     name: row.name ?? null,
     exchange: row.exchange ?? null,
+    description: row.description ?? null,
     createdAt: row.created_at,
     activePlanCount: Number(row.active_plan_count),
     completedPlanCount: Number(row.completed_plan_count),
@@ -58,11 +60,11 @@ export async function hasTransactions(tickerId: string): Promise<boolean> {
 
 export async function addTicker(
   id: string,
-  info?: { name?: string | null; exchange?: string | null }
+  info?: { name?: string | null; exchange?: string | null; description?: string | null }
 ): Promise<void> {
   await getDb().execute({
-    sql: 'INSERT INTO tickers (id, name, exchange) VALUES (?, ?, ?)',
-    args: [id.toUpperCase().trim(), info?.name ?? null, info?.exchange ?? null],
+    sql: 'INSERT INTO tickers (id, name, exchange, description) VALUES (?, ?, ?, ?)',
+    args: [id.toUpperCase().trim(), info?.name ?? null, info?.exchange ?? null, info?.description ?? null],
   })
 }
 
