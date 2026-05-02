@@ -98,7 +98,7 @@ export function TodayTaskList({
                     </span>
                     {estQty != null && (
                       <span className="text-xs text-muted-foreground">
-                        예상 {estQty.toFixed(3)}주
+                        예상 {Math.round(estQty)}주
                       </span>
                     )}
                     {targetPct != null && (
