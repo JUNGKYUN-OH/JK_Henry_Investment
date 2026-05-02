@@ -22,15 +22,14 @@ export function TodayTaskList({
   loading,
   priceError,
 }: Props) {
-  // [TEST] trading day check disabled — re-enable before prod
-  // if (!isTradingDay) {
-  //   return (
-  //     <div className="flex items-center gap-2 rounded-lg border p-4 text-sm text-muted-foreground">
-  //       <AlertCircle className="size-4 shrink-0" />
-  //       오늘은 거래일이 아닙니다
-  //     </div>
-  //   )
-  // }
+  if (!isTradingDay) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border p-4 text-sm text-muted-foreground">
+        <AlertCircle className="size-4 shrink-0" />
+        오늘은 거래일이 아닙니다
+      </div>
+    )
+  }
 
   const activePlans = plans.filter((p) => p.status === 'active')
 
