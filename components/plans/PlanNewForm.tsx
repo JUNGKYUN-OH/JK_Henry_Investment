@@ -1,9 +1,9 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field'
 import {
   Select,
   SelectContent,
@@ -22,6 +22,13 @@ interface Props {
 
 export function PlanNewForm({ tickers, action }: Props) {
   const [state, formAction, isPending] = useActionState(action, {})
+  const [totalAmount, setTotalAmount] = useState('')
+  const [splits, setSplits] = useState('40')
+
+  const dailyAmount =
+    totalAmount && splits && Number(splits) > 0
+      ? Number(totalAmount) / Number(splits)
+      : null
 
   return (
     <form action={formAction} className="space-y-6">
@@ -57,15 +64,48 @@ export function PlanNewForm({ tickers, action }: Props) {
             name="totalAmount"
             type="number"
             step="any"
-            min="1"
+            min="0.01"
             placeholder="예: 4000"
+            value={totalAmount}
+            onChange={(e) => setTotalAmount(e.target.value)}
           />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="splits">분할 횟수 (일)</FieldLabel>
+          <Input
+            id="splits"
+            name="splits"
+            type="number"
+            step="1"
+            min="1"
+            placeholder="기본값: 40"
+            value={splits}
+            onChange={(e) => setSplits(e.target.value)}
+          />
+          <FieldDescription>정수만 입력 가능 (기본값: 40)</FieldDescription>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="targetReturn">목표 수익률 (%)</FieldLabel>
+          <Input
+            id="targetReturn"
+            name="targetReturn"
+            type="number"
+            step="any"
+            min="0.01"
+            placeholder="기본값: 10"
+            defaultValue="10"
+          />
+          <FieldDescription>0보다 큰 값 (기본값: 10%)</FieldDescription>
         </Field>
       </FieldGroup>
 
-      <p className="text-xs text-muted-foreground">
-        입력한 금액을 40일로 나눠 일별 매수 금액이 자동 계산됩니다.
-      </p>
+      {dailyAmount != null && dailyAmount > 0 && (
+        <p className="text-sm text-muted-foreground">
+          일 투자금: <span className="font-medium text-foreground">${dailyAmount.toFixed(2)}</span>
+        </p>
+      )}
 
       <div className="flex gap-2">
         <Button type="submit" disabled={isPending}>
