@@ -201,10 +201,12 @@ export async function getTodayBoughtPlanIds(planIds: string[], date: string): Pr
   return (rows as unknown as { plan_id: string }[]).map((r) => r.plan_id)
 }
 
-export async function isDuplicateDate(planId: string, date: string): Promise<boolean> {
+export async function isDuplicateDate(planId: string, date: string, excludeTxId?: string): Promise<boolean> {
   const { rows } = await getDb().execute({
-    sql: `SELECT 1 FROM transactions WHERE plan_id = ? AND date = ? AND type = 'buy' LIMIT 1`,
-    args: [planId, date],
+    sql: excludeTxId
+      ? `SELECT 1 FROM transactions WHERE plan_id = ? AND date = ? AND type = 'buy' AND id != ? LIMIT 1`
+      : `SELECT 1 FROM transactions WHERE plan_id = ? AND date = ? AND type = 'buy' LIMIT 1`,
+    args: excludeTxId ? [planId, date, excludeTxId] : [planId, date],
   })
   return rows.length > 0
 }

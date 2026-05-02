@@ -46,6 +46,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
                   <th className="text-right px-4 py-2 font-medium">매수가</th>
                   <th className="text-right px-4 py-2 font-medium">수수료</th>
                   <th className="text-right px-4 py-2 font-medium">금액</th>
+                  <th className="px-4 py-2" />
                 </tr>
               </thead>
               <tbody>
@@ -62,6 +63,16 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
                       </td>
                       <td className="px-4 py-2 text-right tabular-nums">
                         {formatUSD(tx.quantity * tx.price)}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        {tx.type === 'buy' && (
+                          <Link
+                            href={`/plans/${id}/transactions/${tx.id}/edit`}
+                            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                          >
+                            수정
+                          </Link>
+                        )}
                       </td>
                     </tr>
                   ))}
