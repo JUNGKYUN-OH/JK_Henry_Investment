@@ -1,13 +1,15 @@
 import { Badge } from '@/components/ui/badge'
 import type { PlanWithProgress } from '@/types'
 import { formatUSD } from '@/lib/format'
+import { DeletePlanButton } from './DeletePlanButton'
 
 interface Props {
   plan: PlanWithProgress
   totalFee?: number
+  deleteAction?: () => Promise<void>
 }
 
-export function PlanDetail({ plan, totalFee }: Props) {
+export function PlanDetail({ plan, totalFee, deleteAction }: Props) {
   const usedAmount = plan.totalAmount - plan.remainingAmount
   const completedSplits = plan.dailyAmount > 0 ? Math.round(usedAmount / plan.dailyAmount) : 0
   const pct = Math.min(100, (usedAmount / plan.totalAmount) * 100)
@@ -72,6 +74,20 @@ export function PlanDetail({ plan, totalFee }: Props) {
           <p className="text-xs text-muted-foreground mb-1">시작일</p>
           <p className="text-base font-semibold tabular-nums">{plan.startDate}</p>
         </div>
+        {plan.completedAt && (
+          <div className="border rounded-lg p-3">
+            <p className="text-xs text-muted-foreground mb-1">완료일</p>
+            <p className="text-base font-semibold tabular-nums">{plan.completedAt}</p>
+          </div>
+        )}
+        {plan.realizedPnl != null && (
+          <div className="border rounded-lg p-3">
+            <p className="text-xs text-muted-foreground mb-1">실현손익</p>
+            <p className={`text-base font-semibold tabular-nums ${plan.realizedPnl >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+              {plan.realizedPnl >= 0 ? '+' : ''}{formatUSD(plan.realizedPnl)}
+            </p>
+          </div>
+        )}
         <div className="border rounded-lg p-3">
           <p className="text-xs text-muted-foreground mb-1">매도 수수료율</p>
           <p className="text-base font-semibold tabular-nums">{(plan.feeRate * 100).toFixed(2)}%</p>
@@ -117,6 +133,12 @@ export function PlanDetail({ plan, totalFee }: Props) {
               </div>
             </>
           )}
+        </section>
+      )}
+
+      {!isActive && deleteAction && (
+        <section className="pt-2">
+          <DeletePlanButton action={deleteAction} />
         </section>
       )}
     </div>

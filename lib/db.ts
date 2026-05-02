@@ -63,6 +63,7 @@ export async function initSchema(db: DbClient): Promise<void> {
         fee_rate REAL NOT NULL DEFAULT 0.0025,
         status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')),
         start_date TEXT NOT NULL,
+        completed_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE IF NOT EXISTS transactions (

@@ -42,12 +42,21 @@ export function PlanList({ plans }: Props) {
                 href={`/plans/${plan.id}`}
                 className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/30 transition-colors text-sm"
               >
-                <div className="flex items-center gap-2">
+                <div className="min-w-0">
                   <span className="font-medium">{plan.tickerId}({plan.startDate})</span>
+                  {plan.completedAt && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{plan.completedAt} 완료</p>
+                  )}
                 </div>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {formatUSD(plan.totalAmount)}
-                </span>
+                <div className="text-right shrink-0 ml-3">
+                  {plan.realizedPnl != null ? (
+                    <span className={`text-xs font-medium tabular-nums ${plan.realizedPnl >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                      {plan.realizedPnl >= 0 ? '+' : ''}{formatUSD(plan.realizedPnl)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground tabular-nums">—</span>
+                  )}
+                </div>
               </Link>
             ))}
           </div>

@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS name TEXT`,
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS exchange TEXT`,
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS description TEXT`,
+      `ALTER TABLE plans ADD COLUMN IF NOT EXISTS completed_at TEXT`,
     ])
     return NextResponse.json({ ok: true, message: 'Schema migrated successfully' })
   } catch (err) {

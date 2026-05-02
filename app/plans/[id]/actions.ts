@@ -1,7 +1,8 @@
 'use server'
 
+import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { recordDailyEntry, isDuplicateDate } from '@/services/plan'
+import { recordDailyEntry, isDuplicateDate, deletePlan } from '@/services/plan'
 
 export interface EntryResult {
   error?: string
@@ -39,4 +40,10 @@ export async function recordDailyEntryAction(
 
   revalidatePath(`/plans/${planId}`)
   return { success: true }
+}
+
+export async function deletePlanAction(planId: string): Promise<void> {
+  await deletePlan(planId)
+  revalidatePath('/plans')
+  redirect('/plans')
 }

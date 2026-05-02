@@ -25,6 +25,7 @@ export interface Plan {
   feeRate: number
   status: 'active' | 'completed'
   startDate: string
+  completedAt: string | null
   createdAt: string
 }
 
@@ -71,6 +72,7 @@ export interface PlanWithProgress {
   feeRate: number
   status: 'active' | 'completed'
   startDate: string
+  completedAt: string | null
   createdAt: string
   completedDays: number
   remainingAmount: number
@@ -78,4 +80,5 @@ export interface PlanWithProgress {
   targetSellPrice: number | null
   firstSellCompleted: boolean
   holdingQty: number
+  realizedPnl: number | null
 }

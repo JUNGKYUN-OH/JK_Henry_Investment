@@ -6,7 +6,7 @@ import { getPlanById } from '@/services/plan'
 import { getTransactionsByPlanId } from '@/services/transaction'
 import { PlanDetail } from '@/components/plans/PlanDetail'
 import { DailyEntryForm } from '@/components/plans/DailyEntryForm'
-import { recordDailyEntryAction } from './actions'
+import { recordDailyEntryAction, deletePlanAction } from './actions'
 import { formatUSD, formatQty } from '@/lib/format'
 
 export default async function PlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +25,11 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
-      <PlanDetail plan={plan} totalFee={totalFee} />
+      <PlanDetail
+        plan={plan}
+        totalFee={totalFee}
+        deleteAction={plan.status === 'completed' ? deletePlanAction.bind(null, plan.id) : undefined}
+      />
 
       {plan.status === 'active' && (
         <section className="mt-8">
