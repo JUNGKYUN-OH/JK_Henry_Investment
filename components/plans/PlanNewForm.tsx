@@ -99,6 +99,20 @@ export function PlanNewForm({ tickers, action }: Props) {
           />
           <FieldDescription>0보다 큰 값 (기본값: 10%)</FieldDescription>
         </Field>
+
+        <Field>
+          <FieldLabel htmlFor="feeRate">매도 수수료율 (%)</FieldLabel>
+          <Input
+            id="feeRate"
+            name="feeRate"
+            type="number"
+            step="any"
+            min="0"
+            placeholder="예: 0.1"
+            defaultValue="0"
+          />
+          <FieldDescription>매도 시 자동 적용 (기본값: 0%)</FieldDescription>
+        </Field>
       </FieldGroup>
 
       {dailyAmount != null && dailyAmount > 0 && (

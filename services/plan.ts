@@ -10,6 +10,7 @@ function rowToPlan(row: {
   daily_amount: number
   splits: number
   target_return: number
+  fee_rate: number
   status: 'active' | 'completed'
   start_date: string
   created_at: string
@@ -21,6 +22,7 @@ function rowToPlan(row: {
     dailyAmount: row.daily_amount,
     splits: row.splits ?? 40,
     targetReturn: row.target_return ?? 0.1,
+    feeRate: row.fee_rate ?? 0,
     status: row.status,
     startDate: row.start_date,
     createdAt: row.created_at,
@@ -167,7 +169,8 @@ export async function createPlan(
   tickerId: string,
   totalAmount: number,
   splits = 40,
-  targetReturn = 0.1
+  targetReturn = 0.1,
+  feeRate = 0
 ): Promise<Plan> {
   const existing = await getActivePlanByTicker(tickerId)
   if (existing) throw new Error(`Active plan already exists for ${tickerId}`)
@@ -176,9 +179,9 @@ export async function createPlan(
   const dailyAmount = totalAmount / splits
   const startDate = new Date().toISOString().slice(0, 10)
   await getDb().execute({
-    sql: `INSERT INTO plans (id, ticker_id, total_amount, daily_amount, splits, target_return, status, start_date)
-          VALUES (?, ?, ?, ?, ?, ?, 'active', ?)`,
-    args: [id, tickerId, totalAmount, dailyAmount, splits, targetReturn, startDate],
+    sql: `INSERT INTO plans (id, ticker_id, total_amount, daily_amount, splits, target_return, fee_rate, status, start_date)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)`,
+    args: [id, tickerId, totalAmount, dailyAmount, splits, targetReturn, feeRate, startDate],
   })
   return (await getPlanById(id))! as Plan
 }

@@ -16,10 +16,12 @@ export async function createPlanAction(
   const totalAmountRaw = formData.get('totalAmount') as string | null
   const splitsRaw = formData.get('splits') as string | null
   const targetReturnRaw = formData.get('targetReturn') as string | null
+  const feeRateRaw = formData.get('feeRate') as string | null
 
   const totalAmount = totalAmountRaw ? parseFloat(totalAmountRaw) : NaN
   const splits = splitsRaw ? parseInt(splitsRaw, 10) : 40
   const targetReturn = targetReturnRaw ? parseFloat(targetReturnRaw) / 100 : 0.1
+  const feeRate = feeRateRaw ? parseFloat(feeRateRaw) / 100 : 0
 
   if (!tickerId) return { error: '종목을 선택하세요.' }
   if (isNaN(totalAmount) || totalAmount <= 0) return { error: '총 투자금액을 입력하세요.' }
@@ -29,9 +31,12 @@ export async function createPlanAction(
   if (isNaN(targetReturn) || targetReturn <= 0) {
     return { error: '목표 수익률은 0보다 큰 값을 입력하세요.' }
   }
+  if (isNaN(feeRate) || feeRate < 0) {
+    return { error: '수수료율은 0 이상의 값을 입력하세요.' }
+  }
 
   try {
-    await createPlan(tickerId, totalAmount, splits, targetReturn)
+    await createPlan(tickerId, totalAmount, splits, targetReturn, feeRate)
   } catch (err) {
     return { error: err instanceof Error ? err.message : '계획 생성 실패' }
   }

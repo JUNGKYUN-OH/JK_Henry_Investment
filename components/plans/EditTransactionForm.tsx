@@ -60,18 +60,7 @@ export function EditTransactionForm({ tx, action }: Props) {
             className="max-w-40"
           />
         </Field>
-        <Field orientation="horizontal">
-          <FieldLabel htmlFor="fee" className="w-20">수수료 ($)</FieldLabel>
-          <Input
-            id="fee"
-            name="fee"
-            type="number"
-            step="any"
-            min="0"
-            defaultValue={tx.fee}
-            className="max-w-40"
-          />
-        </Field>
+        <input type="hidden" name="fee" value="0" />
       </FieldGroup>
 
       <div className="flex gap-2">

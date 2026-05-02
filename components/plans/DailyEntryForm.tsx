@@ -86,18 +86,7 @@ export function DailyEntryForm({ planId, action }: Props) {
             className="max-w-40"
           />
         </Field>
-        <Field orientation="horizontal">
-          <FieldLabel htmlFor="fee" className="w-20">수수료 ($)</FieldLabel>
-          <Input
-            id="fee"
-            name="fee"
-            type="number"
-            step="any"
-            min="0"
-            defaultValue="0"
-            className="max-w-40"
-          />
-        </Field>
+        <input type="hidden" name="fee" value="0" />
       </FieldGroup>
 
       <Button type="submit" size="sm" disabled={isPending}>

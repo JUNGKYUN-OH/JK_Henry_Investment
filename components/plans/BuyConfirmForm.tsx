@@ -29,7 +29,6 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
 
   const priceNum = parseFloat(price)
   const qtyNum = parseFloat(quantity)
-  const feeDefault = '0'
 
   useEffect(() => {
     if (!manualQty && priceNum > 0) {
@@ -91,18 +90,7 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
             <FieldDescription>투자금: {formatUSD(estimatedAmount)}</FieldDescription>
           )}
         </Field>
-        <Field>
-          <FieldLabel htmlFor="fee">수수료 ($)</FieldLabel>
-          <Input
-            id="fee"
-            name="fee"
-            type="number"
-            step="any"
-            min="0"
-            defaultValue={feeDefault}
-            placeholder="0"
-          />
-        </Field>
+        <input type="hidden" name="fee" value="0" />
       </FieldGroup>
 
       <Button type="submit" className="w-full" disabled={isPending}>

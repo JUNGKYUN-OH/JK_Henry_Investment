@@ -36,6 +36,7 @@ export default async function SellPage({ params }: { params: Promise<{ id: strin
         tickerId={plan.tickerId}
         holdingQty={plan.holdingQty}
         planAvgCost={plan.planAvgCost}
+        feeRate={plan.feeRate}
         sellSignal={sellSignal}
         cachedPrice={cachedPrice}
         action={recordSellAction}

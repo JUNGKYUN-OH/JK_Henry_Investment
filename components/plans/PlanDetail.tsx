@@ -70,6 +70,10 @@ export function PlanDetail({ plan, totalFee }: Props) {
           <p className="text-xs text-muted-foreground mb-1">시작일</p>
           <p className="text-base font-semibold tabular-nums">{plan.startDate}</p>
         </div>
+        <div className="border rounded-lg p-3">
+          <p className="text-xs text-muted-foreground mb-1">매도 수수료율</p>
+          <p className="text-base font-semibold tabular-nums">{(plan.feeRate * 100).toFixed(2)}%</p>
+        </div>
         {totalFee != null && (
           <div className="border rounded-lg p-3">
             <p className="text-xs text-muted-foreground mb-1">누적 수수료</p>

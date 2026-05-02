@@ -12,6 +12,7 @@ interface Props {
   tickerId: string
   holdingQty: number
   planAvgCost: number
+  feeRate: number
   sellSignal: 'full' | 'first' | 'second'
   cachedPrice: number | null
   action: typeof recordSellAction
@@ -29,7 +30,7 @@ function buttonLabel(signal: 'full' | 'first' | 'second'): string {
 }
 
 export function SellConfirmForm({
-  planId, tickerId, holdingQty, planAvgCost, sellSignal, cachedPrice, action
+  planId, tickerId, holdingQty, planAvgCost, feeRate, sellSignal, cachedPrice, action
 }: Props) {
   const today = new Date().toLocaleDateString('en-CA')
   const boundAction = action.bind(null, planId)
@@ -42,12 +43,10 @@ export function SellConfirmForm({
   const qtyNum = parseFloat(quantity)
   const qtyError = !isNaN(qtyNum) && qtyNum > holdingQty ? '보유 수량을 초과합니다.' : null
 
-  const realizedPnl =
-    !isNaN(priceNum) && !isNaN(qtyNum) && planAvgCost > 0
-      ? (priceNum - planAvgCost) * qtyNum
-      : null
-  const realizedPnlPct =
-    realizedPnl != null && planAvgCost > 0 ? (realizedPnl / (planAvgCost * qtyNum)) * 100 : null
+  const fee = !isNaN(priceNum) && !isNaN(qtyNum) ? priceNum * qtyNum * feeRate : 0
+  const grossPnl = !isNaN(priceNum) && !isNaN(qtyNum) ? (priceNum - planAvgCost) * qtyNum : null
+  const netPnl = grossPnl != null ? grossPnl - fee : null
+  const netPnlPct = netPnl != null && planAvgCost > 0 ? (netPnl / (planAvgCost * qtyNum)) * 100 : null
 
   return (
     <form action={formAction} className="space-y-6">
@@ -56,6 +55,7 @@ export function SellConfirmForm({
         <p className="text-lg font-semibold">{tickerId}</p>
         <p className="text-xs text-muted-foreground mt-1">
           보유 수량 {holdingQty.toFixed(4)}주 · 평균단가 {formatUSD(planAvgCost)}
+          {feeRate > 0 && ` · 수수료율 ${formatPct(feeRate * 100)}`}
         </p>
       </div>
 
@@ -96,35 +96,20 @@ export function SellConfirmForm({
           />
           {qtyError ? (
             <FieldDescription className="text-destructive">{qtyError}</FieldDescription>
-          ) : realizedPnl != null ? (
+          ) : netPnl != null ? (
             <FieldDescription>
-              예상 실현손익{' '}
-              <span className={realizedPnl >= 0 ? 'text-green-600' : 'text-destructive'}>
-                {formatUSD(realizedPnl)}
-                {realizedPnlPct != null && ` (${formatPct(realizedPnlPct)})`}
+              {feeRate > 0 && <span className="text-muted-foreground">수수료 {formatUSD(fee)} · </span>}
+              순 실현손익{' '}
+              <span className={netPnl >= 0 ? 'text-green-600' : 'text-destructive'}>
+                {formatUSD(netPnl)}
+                {netPnlPct != null && ` (${formatPct(netPnlPct)})`}
               </span>
             </FieldDescription>
           ) : null}
         </Field>
-        <Field>
-          <FieldLabel htmlFor="sell-fee">수수료 ($)</FieldLabel>
-          <Input
-            id="sell-fee"
-            name="fee"
-            type="number"
-            step="any"
-            min="0"
-            defaultValue="0"
-            placeholder="0"
-          />
-        </Field>
       </FieldGroup>
 
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isPending || !!qtyError}
-      >
+      <Button type="submit" className="w-full" disabled={isPending || !!qtyError}>
         {isPending ? '저장 중...' : buttonLabel(sellSignal)}
       </Button>
     </form>

@@ -22,6 +22,7 @@ export interface Plan {
   dailyAmount: number
   splits: number
   targetReturn: number
+  feeRate: number
   status: 'active' | 'completed'
   startDate: string
   createdAt: string
@@ -67,6 +68,7 @@ export interface PlanWithProgress {
   dailyAmount: number
   splits: number
   targetReturn: number
+  feeRate: number
   status: 'active' | 'completed'
   startDate: string
   createdAt: string
