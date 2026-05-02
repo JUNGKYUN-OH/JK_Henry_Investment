@@ -75,4 +75,5 @@ export interface PlanWithProgress {
   planAvgCost: number | null
   targetSellPrice: number | null
   firstSellCompleted: boolean
+  holdingQty: number
 }
