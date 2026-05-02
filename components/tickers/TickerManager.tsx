@@ -150,14 +150,14 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
                 </AlertDialogMedia>
                 <AlertDialogTitle>{tickerToDelete?.id} 삭제</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {hasPlan(tickerToDelete!)
-                    ? `투자 계획(진행 중 ${tickerToDelete!.activePlanCount}건, 완료 ${tickerToDelete!.completedPlanCount}건)이 있는 종목은 삭제할 수 없습니다.`
+                  {tickerToDelete && hasPlan(tickerToDelete)
+                    ? `투자 계획(진행 중 ${tickerToDelete.activePlanCount}건, 완료 ${tickerToDelete.completedPlanCount}건)이 있는 종목은 삭제할 수 없습니다.`
                     : '티커를 목록에서 영구적으로 제거합니다. 이 작업은 되돌릴 수 없습니다.'}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
-                {hasPlan(tickerToDelete!) ? null : (
+                {tickerToDelete && hasPlan(tickerToDelete) ? null : (
                   <AlertDialogAction
                     variant="destructive"
                     disabled={isPending}
