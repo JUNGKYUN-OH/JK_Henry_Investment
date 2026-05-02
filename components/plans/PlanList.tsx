@@ -74,7 +74,7 @@ function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
           )}
         </div>
         <span className="text-sm text-muted-foreground tabular-nums">
-          {formatUSD(usedAmount)} / {formatUSD(plan.totalAmount)}
+          {Math.round(usedAmount)} / {Math.round(plan.totalAmount)}
         </span>
       </div>
 
