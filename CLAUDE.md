@@ -13,6 +13,11 @@ Ideate → Define → Sketch → Plan → Build → Compound
 | Build | `/execute-plan` | `artifacts/<feature>/learnings.md` |
 | Compound | `/compound` | — |
 
+## Project
+
+- **앱 이름**: Henry Ledger
+- **배포 플랫폼**: Vercel (Next.js App Router, Vercel Postgres)
+
 ## Development Workflow
 
 - 패키지 매니저: `bun`

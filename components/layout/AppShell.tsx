@@ -2,14 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ArrowLeftRight, CalendarDays, ListFilter } from 'lucide-react'
+import { Home, CalendarDays, ListFilter } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/', label: '대시보드', icon: LayoutDashboard },
-  { href: '/transactions', label: '거래 내역', icon: ArrowLeftRight },
-  { href: '/plans', label: '투자 계획', icon: CalendarDays },
-  { href: '/tickers', label: '티커 관리', icon: ListFilter },
+  { href: '/', label: '홈', icon: Home },
+  { href: '/plans', label: '계획', icon: CalendarDays },
+  { href: '/tickers', label: '티커', icon: ListFilter },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
