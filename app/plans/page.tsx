@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PlanList } from '@/components/plans/PlanList'
+import { AnnualPnlTable } from '@/components/plans/AnnualPnlTable'
 import { PortfolioSummary } from '@/components/home/PortfolioSummary'
 import { getAllPlans } from '@/services/plan'
 import { calcActiveHoldings } from '@/services/portfolio'
@@ -43,6 +44,8 @@ export default async function PlansPage() {
           />
         </section>
       )}
+
+      <AnnualPnlTable plans={plans} />
 
       <PlanList plans={plans} />
     </div>
