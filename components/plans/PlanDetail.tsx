@@ -53,7 +53,7 @@ export function PlanDetail({ plan, totalFee }: Props) {
           <p className="text-base font-semibold tabular-nums">{formatUSD(plan.totalAmount)}</p>
         </div>
         <div className="border rounded-lg p-3">
-          <p className="text-xs text-muted-foreground mb-1">일 투자금</p>
+          <p className="text-xs text-muted-foreground mb-1">회당 투자금</p>
           <p className="text-base font-semibold tabular-nums">{formatUSD(plan.dailyAmount)}</p>
         </div>
         <div className="border rounded-lg p-3">

@@ -44,7 +44,7 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
       <div className="border rounded-lg p-4 bg-muted/20">
         <p className="text-xs text-muted-foreground mb-0.5">종목</p>
         <p className="text-lg font-semibold">{tickerId}</p>
-        <p className="text-xs text-muted-foreground mt-1">일 투자금 {formatUSD(dailyAmount)}</p>
+        <p className="text-xs text-muted-foreground mt-1">회당 투자금 {formatUSD(dailyAmount)}</p>
       </div>
 
       {state.error && (

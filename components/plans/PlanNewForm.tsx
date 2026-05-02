@@ -72,7 +72,7 @@ export function PlanNewForm({ tickers, action }: Props) {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="splits">분할 횟수 (일)</FieldLabel>
+          <FieldLabel htmlFor="splits">분할 횟수</FieldLabel>
           <Input
             id="splits"
             name="splits"
@@ -103,7 +103,7 @@ export function PlanNewForm({ tickers, action }: Props) {
 
       {dailyAmount != null && dailyAmount > 0 && (
         <p className="text-sm text-muted-foreground">
-          일 투자금: <span className="font-medium text-foreground">${dailyAmount.toFixed(2)}</span>
+          회당 투자금: <span className="font-medium text-foreground">${dailyAmount.toFixed(2)}</span>
         </p>
       )}
 
