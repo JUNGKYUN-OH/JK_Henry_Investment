@@ -22,7 +22,7 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
 
   const [price, setPrice] = useState(cachedPrice != null ? String(cachedPrice) : '')
   const [quantity, setQuantity] = useState(() => {
-    if (cachedPrice != null && cachedPrice > 0) return (dailyAmount / cachedPrice).toFixed(6)
+    if (cachedPrice != null && cachedPrice > 0) return String(Math.round(dailyAmount / cachedPrice))
     return ''
   })
   const [manualQty, setManualQty] = useState(false)
@@ -32,7 +32,7 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
 
   useEffect(() => {
     if (!manualQty && priceNum > 0) {
-      setQuantity((dailyAmount / priceNum).toFixed(6))
+      setQuantity(String(Math.round(dailyAmount / priceNum)))
     }
   }, [priceNum, manualQty, dailyAmount])
 
@@ -84,7 +84,7 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
               setQuantity(e.target.value)
               setManualQty(true)
             }}
-            placeholder="0.000000"
+            placeholder="0"
           />
           {estimatedAmount != null && (
             <FieldDescription>투자금: {formatUSD(estimatedAmount)}</FieldDescription>
