@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { getPlanById } from '@/services/plan'
 import { getCachedPrices } from '@/services/price'
 import { BuyConfirmForm } from '@/components/plans/BuyConfirmForm'
-import { recordBuyAction } from './actions'
+import { recordBuyAction, skipBuyAction } from './actions'
 
 export default async function BuyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -31,6 +31,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
         dailyAmount={plan.dailyAmount}
         cachedPrice={cachedPrice}
         action={recordBuyAction}
+        skipAction={skipBuyAction}
       />
     </div>
   )

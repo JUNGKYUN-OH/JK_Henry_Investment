@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { recordDailyEntry } from '@/services/plan'
+import { recordDailyEntry, recordSkip } from '@/services/plan'
 
 export interface BuyResult {
   error?: string
@@ -33,6 +33,13 @@ export async function recordBuyAction(
     return { error: err instanceof Error ? err.message : '기록 저장 실패' }
   }
 
+  revalidatePath('/')
+  redirect('/')
+}
+
+export async function skipBuyAction(planId: string, _formData: FormData): Promise<void> {
+  const date = new Date().toLocaleDateString('en-CA')
+  await recordSkip(planId, date, 'buy')
   revalidatePath('/')
   redirect('/')
 }

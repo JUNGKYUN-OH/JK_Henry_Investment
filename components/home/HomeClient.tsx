@@ -16,6 +16,7 @@ interface HomeData {
   activePlans: PlanWithProgress[]
   cachedPrices: PriceMap
   todayBoughtPlanIds: string[]
+  todaySellSkippedPlanIds: string[]
   today: string
   isTodayTradingDay: boolean
 }
@@ -27,7 +28,7 @@ interface PriceResult {
 }
 
 export function HomeClient({ initialData }: { initialData: HomeData }) {
-  const { activePlans, cachedPrices, todayBoughtPlanIds, isTodayTradingDay } = initialData
+  const { activePlans, cachedPrices, todayBoughtPlanIds, todaySellSkippedPlanIds, isTodayTradingDay } = initialData
 
   const [prices, setPrices] = useState<PriceMap>(cachedPrices)
   const [loading, setLoading] = useState(true)
@@ -57,7 +58,8 @@ export function HomeClient({ initialData }: { initialData: HomeData }) {
     return () => { cancelled = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasSellSignals = !loading && activePlans.some((plan) => {
+  const sellablePlans = activePlans.filter((p) => !todaySellSkippedPlanIds.includes(p.id))
+  const hasSellSignals = !loading && sellablePlans.some((plan) => {
     const priceInfo = prices[plan.tickerId]
     return priceInfo != null && plan.planAvgCost != null && computeSellSignal(plan, priceInfo.price) !== null
   })
@@ -104,7 +106,7 @@ export function HomeClient({ initialData }: { initialData: HomeData }) {
           {hasSellSignals && (
             <div>
               <h3 className="text-xs font-medium text-muted-foreground mb-2">매도하기</h3>
-              <SellBanner plans={activePlans} prices={prices} />
+              <SellBanner plans={sellablePlans} prices={prices} />
             </div>
           )}
         </div>

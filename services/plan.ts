@@ -193,12 +193,42 @@ export async function completePlan(id: string): Promise<void> {
 export async function getTodayBoughtPlanIds(planIds: string[], date: string): Promise<string[]> {
   if (planIds.length === 0) return []
   const placeholders = planIds.map(() => '?').join(',')
+  const [{ rows: txRows }, { rows: skipRows }] = await Promise.all([
+    getDb().execute({
+      sql: `SELECT DISTINCT plan_id FROM transactions
+            WHERE date = ? AND type = 'buy' AND plan_id IN (${placeholders})`,
+      args: [date, ...planIds],
+    }),
+    getDb().execute({
+      sql: `SELECT DISTINCT plan_id FROM plan_daily_skips
+            WHERE date = ? AND type = 'buy' AND plan_id IN (${placeholders})`,
+      args: [date, ...planIds],
+    }),
+  ])
+  const ids = new Set([
+    ...(txRows as unknown as { plan_id: string }[]).map((r) => r.plan_id),
+    ...(skipRows as unknown as { plan_id: string }[]).map((r) => r.plan_id),
+  ])
+  return [...ids]
+}
+
+export async function getTodaySellSkippedPlanIds(planIds: string[], date: string): Promise<string[]> {
+  if (planIds.length === 0) return []
+  const placeholders = planIds.map(() => '?').join(',')
   const { rows } = await getDb().execute({
-    sql: `SELECT DISTINCT plan_id FROM transactions
-          WHERE date = ? AND type = 'buy' AND plan_id IN (${placeholders})`,
+    sql: `SELECT DISTINCT plan_id FROM plan_daily_skips
+          WHERE date = ? AND type = 'sell' AND plan_id IN (${placeholders})`,
     args: [date, ...planIds],
   })
   return (rows as unknown as { plan_id: string }[]).map((r) => r.plan_id)
+}
+
+export async function recordSkip(planId: string, date: string, type: 'buy' | 'sell'): Promise<void> {
+  await getDb().execute({
+    sql: `INSERT INTO plan_daily_skips (plan_id, date, type) VALUES (?, ?, ?)
+          ON CONFLICT DO NOTHING`,
+    args: [planId, date, type],
+  })
 }
 
 export async function isDuplicateDate(planId: string, date: string, excludeTxId?: string): Promise<boolean> {

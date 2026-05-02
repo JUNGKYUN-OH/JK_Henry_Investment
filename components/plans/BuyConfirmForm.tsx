@@ -1,12 +1,11 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field'
 import { formatUSD } from '@/lib/format'
-import type { recordBuyAction } from '@/app/plans/[id]/buy/actions'
+import type { recordBuyAction, skipBuyAction } from '@/app/plans/[id]/buy/actions'
 
 interface Props {
   planId: string
@@ -14,11 +13,13 @@ interface Props {
   dailyAmount: number
   cachedPrice: number | null
   action: typeof recordBuyAction
+  skipAction: typeof skipBuyAction
 }
 
-export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, action }: Props) {
+export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, action, skipAction }: Props) {
   const today = new Date().toLocaleDateString('en-CA')
   const boundAction = action.bind(null, planId)
+  const boundSkipAction = skipAction.bind(null, planId)
   const [state, formAction, isPending] = useActionState(boundAction, {})
 
   const [settled, setSettled] = useState<boolean | null>(null)
@@ -47,9 +48,9 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
           <Button onClick={() => setSettled(true)}>
             체결됨
           </Button>
-          <Button variant="outline" asChild>
-            <Link href="/">미체결 — 건너뜀</Link>
-          </Button>
+          <form action={boundSkipAction} className="contents">
+            <Button type="submit" variant="outline">미체결 — 건너뜀</Button>
+          </form>
         </div>
       </div>
     )

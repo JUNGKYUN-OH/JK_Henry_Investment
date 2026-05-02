@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { recordSell, getPlanById } from '@/services/plan'
+import { recordSell, getPlanById, recordSkip } from '@/services/plan'
 
 export interface SellResult {
   error?: string
@@ -35,6 +35,13 @@ export async function recordSellAction(
     return { error: err instanceof Error ? err.message : '매도 저장 실패' }
   }
 
+  revalidatePath('/')
+  redirect('/')
+}
+
+export async function skipSellAction(planId: string, _formData: FormData): Promise<void> {
+  const date = new Date().toLocaleDateString('en-CA')
+  await recordSkip(planId, date, 'sell')
   revalidatePath('/')
   redirect('/')
 }

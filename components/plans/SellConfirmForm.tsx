@@ -1,12 +1,11 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field'
 import { formatUSD, formatPct } from '@/lib/format'
-import type { recordSellAction } from '@/app/plans/[id]/sell/actions'
+import type { recordSellAction, skipSellAction } from '@/app/plans/[id]/sell/actions'
 
 interface Props {
   planId: string
@@ -17,6 +16,7 @@ interface Props {
   sellSignal: 'full' | 'first' | 'second'
   cachedPrice: number | null
   action: typeof recordSellAction
+  skipAction: typeof skipSellAction
 }
 
 function signalLabel(signal: 'full' | 'first' | 'second'): string {
@@ -37,10 +37,11 @@ function buttonLabel(signal: 'full' | 'first' | 'second'): string {
 }
 
 export function SellConfirmForm({
-  planId, tickerId, holdingQty, planAvgCost, feeRate, sellSignal, cachedPrice, action
+  planId, tickerId, holdingQty, planAvgCost, feeRate, sellSignal, cachedPrice, action, skipAction
 }: Props) {
   const today = new Date().toLocaleDateString('en-CA')
   const boundAction = action.bind(null, planId)
+  const boundSkipAction = skipAction.bind(null, planId)
   const [state, formAction, isPending] = useActionState(boundAction, {})
 
   const [settled, setSettled] = useState<boolean | null>(null)
@@ -77,9 +78,9 @@ export function SellConfirmForm({
           <Button onClick={() => setSettled(true)}>
             체결됨
           </Button>
-          <Button variant="outline" asChild>
-            <Link href="/">미체결 — 닫기</Link>
-          </Button>
+          <form action={boundSkipAction} className="contents">
+            <Button type="submit" variant="outline">미체결 — 닫기</Button>
+          </form>
         </div>
       </div>
     )

@@ -81,6 +81,12 @@ export async function initSchema(db: DbClient): Promise<void> {
         price REAL NOT NULL,
         fetched_at TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS plan_daily_skips (
+        plan_id TEXT NOT NULL REFERENCES plans(id),
+        date TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('buy', 'sell')),
+        PRIMARY KEY (plan_id, date, type)
+      )`,
     ],
     'write'
   )

@@ -42,6 +42,12 @@ export async function POST(request: NextRequest) {
       `ALTER TABLE plans ADD COLUMN IF NOT EXISTS splits INTEGER NOT NULL DEFAULT 40`,
       `ALTER TABLE plans ADD COLUMN IF NOT EXISTS target_return REAL NOT NULL DEFAULT 0.10`,
       `ALTER TABLE plans ADD COLUMN IF NOT EXISTS fee_rate REAL NOT NULL DEFAULT 0.0025`,
+      `CREATE TABLE IF NOT EXISTS plan_daily_skips (
+        plan_id TEXT NOT NULL REFERENCES plans(id),
+        date TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('buy', 'sell')),
+        PRIMARY KEY (plan_id, date, type)
+      )`,
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS name TEXT`,
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS exchange TEXT`,
       `ALTER TABLE tickers ADD COLUMN IF NOT EXISTS description TEXT`,

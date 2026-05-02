@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { getAllPlans, getTodayBoughtPlanIds } from '@/services/plan'
+import { getAllPlans, getTodayBoughtPlanIds, getTodaySellSkippedPlanIds } from '@/services/plan'
 import { getCachedPrices } from '@/services/price'
 import { isTradingDay } from '@/lib/tradingDay'
 import { HomeClient } from '@/components/home/HomeClient'
@@ -14,10 +14,11 @@ export default async function HomePage() {
   ])
 
   const activePlans = allPlans.filter((p) => p.status === 'active')
-  const todayBoughtPlanIds = await getTodayBoughtPlanIds(
-    activePlans.map((p) => p.id),
-    today
-  )
+  const activePlanIds = activePlans.map((p) => p.id)
+  const [todayBoughtPlanIds, todaySellSkippedPlanIds] = await Promise.all([
+    getTodayBoughtPlanIds(activePlanIds, today),
+    getTodaySellSkippedPlanIds(activePlanIds, today),
+  ])
 
   const cachedPrices: Record<string, { price: number; fetchedAt: string }> = {}
   for (const [tickerId, info] of cachedPricesMap) {
@@ -30,6 +31,7 @@ export default async function HomePage() {
         activePlans,
         cachedPrices,
         todayBoughtPlanIds,
+        todaySellSkippedPlanIds,
         today,
         isTodayTradingDay: isTradingDay(today),
       }}

@@ -6,7 +6,7 @@ import { getPlanById } from '@/services/plan'
 import { computeSellSignal } from '@/lib/sellSignal'
 import { getCachedPrices } from '@/services/price'
 import { SellConfirmForm } from '@/components/plans/SellConfirmForm'
-import { recordSellAction } from './actions'
+import { recordSellAction, skipSellAction } from './actions'
 
 export default async function SellPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -40,6 +40,7 @@ export default async function SellPage({ params }: { params: Promise<{ id: strin
         sellSignal={sellSignal}
         cachedPrice={cachedPrice}
         action={recordSellAction}
+        skipAction={skipSellAction}
       />
     </div>
   )
