@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
 import type { PlanWithProgress } from '@/types'
 import { formatUSD } from '@/lib/format'
 
@@ -34,41 +35,24 @@ export function PlanList({ plans }: Props) {
       {completed.length > 0 && (
         <section>
           <h2 className="text-sm font-medium mb-3">완료</h2>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="text-left px-4 py-2 font-medium">종목</th>
-                  <th className="text-right px-4 py-2 font-medium">총 투자금</th>
-                  <th className="text-right px-4 py-2 font-medium">일 투자금</th>
-                  <th className="text-right px-4 py-2 font-medium">평균단가</th>
-                  <th className="text-right px-4 py-2 font-medium">목표매도가</th>
-                  <th className="text-right px-4 py-2 font-medium">시작일</th>
-                </tr>
-              </thead>
-              <tbody>
-                {completed.map((plan) => (
-                  <tr key={plan.id} className="border-b last:border-0">
-                    <td className="px-4 py-2 font-mono">{plan.tickerId}</td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {formatUSD(plan.totalAmount)}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {formatUSD(plan.dailyAmount)}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {plan.planAvgCost != null ? formatUSD(plan.planAvgCost) : '—'}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {plan.targetSellPrice != null ? formatUSD(plan.targetSellPrice) : '—'}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">
-                      {plan.startDate}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-2">
+            {completed.map((plan) => (
+              <Link
+                key={plan.id}
+                href={`/plans/${plan.id}`}
+                className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/30 transition-colors text-sm"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{plan.tickerId}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {plan.startDate} — {plan.completedDays}/{plan.splits}일
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {formatUSD(plan.totalAmount)}
+                </span>
+              </Link>
+            ))}
           </div>
         </section>
       )}
@@ -77,14 +61,19 @@ export function PlanList({ plans }: Props) {
 }
 
 function ActivePlanCard({ plan }: { plan: PlanWithProgress }) {
-  const pct = Math.min(100, (plan.completedDays / 40) * 100)
+  const pct = Math.min(100, (plan.completedDays / plan.splits) * 100)
 
   return (
     <Link href={`/plans/${plan.id}`} className="block border rounded-lg p-4 hover:bg-muted/30 transition-colors">
       <div className="flex items-center justify-between mb-3">
-        <span className="font-mono font-medium">{plan.tickerId}</span>
-        <span className="text-sm text-muted-foreground">
-          {plan.completedDays} / 40일
+        <div className="flex items-center gap-2">
+          <span className="font-mono font-medium">{plan.tickerId}</span>
+          {plan.firstSellCompleted && (
+            <Badge variant="secondary" className="text-xs">1차 완료</Badge>
+          )}
+        </div>
+        <span className="text-sm text-muted-foreground tabular-nums">
+          {plan.completedDays} / {plan.splits}일
         </span>
       </div>
 

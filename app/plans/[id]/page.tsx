@@ -15,6 +15,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
   if (!plan) notFound()
 
   const transactions = await getTransactionsByPlanId(id)
+  const totalFee = transactions.reduce((sum, tx) => sum + tx.fee, 0)
 
   return (
     <div className="p-6 max-w-3xl">
@@ -24,7 +25,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
-      <PlanDetail plan={plan} />
+      <PlanDetail plan={plan} totalFee={totalFee} />
 
       {plan.status === 'active' && (
         <section className="mt-8">

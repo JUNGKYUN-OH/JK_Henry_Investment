@@ -1,10 +1,11 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field'
+import { isTradingDay } from '@/lib/tradingDay'
 import type { recordDailyEntryAction } from '@/app/plans/[id]/actions'
 
 interface Props {
@@ -18,14 +19,17 @@ export function DailyEntryForm({ planId, action }: Props) {
   const formRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
 
+  const today = new Date().toLocaleDateString('en-CA')
+  const [selectedDate, setSelectedDate] = useState(today)
+  const nonTradingWarning = selectedDate && !isTradingDay(selectedDate)
+
   useEffect(() => {
     if (state.success) {
       formRef.current?.reset()
+      setSelectedDate(today)
       router.refresh()
     }
-  }, [state.success, router])
-
-  const today = new Date().toLocaleDateString('en-CA')
+  }, [state.success, router, today])
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4">
@@ -41,15 +45,22 @@ export function DailyEntryForm({ planId, action }: Props) {
       )}
 
       <FieldGroup>
-        <Field orientation="horizontal">
-          <FieldLabel htmlFor="date" className="w-20">날짜</FieldLabel>
+        <Field>
+          <FieldLabel htmlFor="date">날짜</FieldLabel>
           <Input
             id="date"
             name="date"
             type="date"
-            defaultValue={today}
+            max={today}
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
             className="max-w-44"
           />
+          {nonTradingWarning && (
+            <FieldDescription className="text-amber-600">
+              거래일이 아닌 날짜입니다. 소급 입력 시 확인 후 저장하세요.
+            </FieldDescription>
+          )}
         </Field>
         <Field orientation="horizontal">
           <FieldLabel htmlFor="quantity" className="w-20">수량</FieldLabel>
