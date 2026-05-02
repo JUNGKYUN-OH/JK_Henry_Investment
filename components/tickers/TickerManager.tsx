@@ -1,47 +1,63 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useTransition, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Trash2, AlertTriangle } from 'lucide-react'
 import type { ActionResult } from '@/app/tickers/actions'
 import type { TickerWithCount } from '@/services/ticker'
 
 interface Props {
   tickers: TickerWithCount[]
   addAction: (prev: ActionResult, formData: FormData) => Promise<ActionResult>
-  deleteAction: (prev: ActionResult, formData: FormData) => Promise<ActionResult>
+  deleteAction: (id: string) => Promise<ActionResult>
 }
 
 export function TickerManager({ tickers, addAction, deleteAction }: Props) {
   const [addState, addFormAction, addPending] = useActionState(addAction, {})
-  const [, deleteFormAction, deletePending] = useActionState(deleteAction, {})
   const [inputValue, setInputValue] = useState('')
-  const [tickerToDelete, setTickerToDelete] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const handleDeleteClick = (tickerId: string, hasTransactions: boolean) => {
-    if (hasTransactions) {
-      setDeleteError('거래 기록이 있는 종목은 삭제할 수 없습니다.')
-      setTickerToDelete(tickerId)
-    } else {
-      setDeleteError(null)
-      setTickerToDelete(tickerId)
-    }
+  const [tickerToDelete, setTickerToDelete] = useState<TickerWithCount | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  const hasPlan = (t: TickerWithCount) => t.activePlanCount + t.completedPlanCount > 0
+
+  const handleDeleteClick = (ticker: TickerWithCount) => {
+    setDeleteError(null)
+    setTickerToDelete(ticker)
   }
 
-  const handleDialogClose = () => {
-    setTickerToDelete(null)
-    setDeleteError(null)
+  const handleConfirmDelete = () => {
+    if (!tickerToDelete) return
+    startTransition(async () => {
+      const result = await deleteAction(tickerToDelete.id)
+      if (result.error) {
+        setDeleteError(result.error)
+      } else {
+        setTickerToDelete(null)
+        setDeleteError(null)
+      }
+    })
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open && !isPending) {
+      setTickerToDelete(null)
+      setDeleteError(null)
+    }
   }
 
   return (
@@ -78,8 +94,8 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
         ) : (
           <ul className="divide-y border rounded-md">
             {tickers.map((ticker) => (
-              <li key={ticker.id} className="flex items-center justify-between px-4 py-3">
-                <div className="min-w-0">
+              <li key={ticker.id} className="flex items-start justify-between px-4 py-3 gap-3">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-sm font-medium">{ticker.id}</span>
                     {ticker.exchange && (
@@ -100,7 +116,8 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDeleteClick(ticker.id, ticker.activePlanCount + ticker.completedPlanCount > 0)}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => handleDeleteClick(ticker)}
                 >
                   삭제
                 </Button>
@@ -110,29 +127,51 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
         )}
       </div>
 
-      <AlertDialog open={!!tickerToDelete} onOpenChange={(open) => !open && handleDialogClose()}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{tickerToDelete} 삭제</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteError
-                ? deleteError
-                : `${tickerToDelete} 티커를 목록에서 제거합니다. 이 작업은 되돌릴 수 없습니다.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDialogClose}>
-              {deleteError ? '닫기' : '취소'}
-            </AlertDialogCancel>
-            {!deleteError && (
-              <form action={deleteFormAction}>
-                <input type="hidden" name="id" value={tickerToDelete ?? ''} />
-                <Button type="submit" variant="destructive" disabled={deletePending} onClick={handleDialogClose}>
-                  삭제
-                </Button>
-              </form>
-            )}
-          </AlertDialogFooter>
+      <AlertDialog open={!!tickerToDelete} onOpenChange={handleDialogClose}>
+        <AlertDialogContent size="sm">
+          {deleteError ? (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogMedia>
+                  <AlertTriangle className="text-yellow-500" />
+                </AlertDialogMedia>
+                <AlertDialogTitle>삭제할 수 없습니다</AlertDialogTitle>
+                <AlertDialogDescription>{deleteError}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => handleDialogClose(false)}>닫기</AlertDialogCancel>
+              </AlertDialogFooter>
+            </>
+          ) : (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogMedia>
+                  <Trash2 className="text-destructive" />
+                </AlertDialogMedia>
+                <AlertDialogTitle>{tickerToDelete?.id} 삭제</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {hasPlan(tickerToDelete!)
+                    ? `투자 계획(진행 중 ${tickerToDelete!.activePlanCount}건, 완료 ${tickerToDelete!.completedPlanCount}건)이 있는 종목은 삭제할 수 없습니다.`
+                    : '티커를 목록에서 영구적으로 제거합니다. 이 작업은 되돌릴 수 없습니다.'}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
+                {hasPlan(tickerToDelete!) ? null : (
+                  <AlertDialogAction
+                    variant="destructive"
+                    disabled={isPending}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleConfirmDelete()
+                    }}
+                  >
+                    {isPending ? '삭제 중...' : '삭제'}
+                  </AlertDialogAction>
+                )}
+              </AlertDialogFooter>
+            </>
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </div>

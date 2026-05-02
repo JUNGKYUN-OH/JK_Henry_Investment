@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getAllTickersWithCounts } from '@/services/ticker'
-import { addTickerAction, deleteTickerAction } from './actions'
+import { addTickerAction, deleteTickerById } from './actions'
 import { TickerManager } from '@/components/tickers/TickerManager'
 
 export default async function TickersPage() {
@@ -10,7 +10,7 @@ export default async function TickersPage() {
     <TickerManager
       tickers={tickers}
       addAction={addTickerAction}
-      deleteAction={deleteTickerAction}
+      deleteAction={deleteTickerById}
     />
   )
 }

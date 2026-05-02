@@ -60,7 +60,10 @@ export async function deleteTickerAction(
   formData: FormData
 ): Promise<ActionResult> {
   const id = (formData.get('id') as string | null) ?? ''
+  return deleteTickerById(id)
+}
 
+export async function deleteTickerById(id: string): Promise<ActionResult> {
   if (!id) return { error: '티커 ID가 없습니다.' }
   if (await hasTransactions(id)) return { error: '거래 기록이 있는 종목은 삭제할 수 없습니다.' }
 
