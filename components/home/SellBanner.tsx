@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { TrendingUp } from 'lucide-react'
 import { formatUSD, formatPct } from '@/lib/format'
 import type { PlanWithProgress } from '@/types'
-import { computeSellSignal } from '@/services/plan'
+import { computeSellSignal } from '@/lib/sellSignal'
 
 interface Props {
   plans: PlanWithProgress[]

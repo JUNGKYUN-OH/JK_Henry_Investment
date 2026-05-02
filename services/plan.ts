@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/db'
 import type { Plan, PlanWithProgress } from '@/types'
 import { createTransaction } from './transaction'
+export { computeSellSignal } from '@/lib/sellSignal'
 
 function rowToPlan(row: {
   id: string
@@ -53,14 +54,18 @@ async function calcPlanProgress(
   const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
   const targetSellPrice = planAvgCost != null ? planAvgCost * (1 + targetReturn) : null
 
-  const { rows: sellCntRows } = await db.execute({
-    sql: `SELECT COUNT(*) AS cnt FROM transactions WHERE plan_id = ? AND type = 'sell'`,
+  const { rows: sellRows } = await db.execute({
+    sql: `SELECT COUNT(*) AS cnt, COALESCE(SUM(quantity), 0) AS sell_qty
+          FROM transactions WHERE plan_id = ? AND type = 'sell'`,
     args: [planId],
   })
-  const sellCount = Number((sellCntRows[0] as unknown as { cnt: number | bigint }).cnt)
+  const sellRow = sellRows[0] as unknown as { cnt: number | bigint; sell_qty: number }
+  const sellCount = Number(sellRow.cnt)
+  const totalSellQty = Number(sellRow.sell_qty)
+  const holdingQty = Math.max(0, totalBuyQty - totalSellQty)
   const firstSellCompleted = completedDays > splits / 2 && sellCount >= 1
 
-  return { completedDays, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted }
+  return { completedDays, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted, holdingQty }
 }
 
 export async function getAllPlans(): Promise<PlanWithProgress[]> {
@@ -87,16 +92,16 @@ export async function getAllPlans(): Promise<PlanWithProgress[]> {
   )
 
   const { rows: sellCntRows } = await db.execute({
-    sql: `SELECT plan_id, COUNT(*) AS sell_count
+    sql: `SELECT plan_id, COUNT(*) AS sell_count, COALESCE(SUM(quantity), 0) AS sell_qty
           FROM transactions
           WHERE type = 'sell' AND plan_id IN (${dayPlaceholders})
           GROUP BY plan_id`,
     args: planIds,
   })
   const sellMap = new Map(
-    (sellCntRows as unknown as { plan_id: string; sell_count: number | bigint }[]).map((r) => [
+    (sellCntRows as unknown as { plan_id: string; sell_count: number | bigint; sell_qty: number }[]).map((r) => [
       r.plan_id,
-      Number(r.sell_count),
+      { count: Number(r.sell_count), qty: Number(r.sell_qty) },
     ])
   )
 
@@ -122,15 +127,16 @@ export async function getAllPlans(): Promise<PlanWithProgress[]> {
   return planRows.map((row) => {
     const plan = rowToPlan(row)
     const completedDays = dayMap.get(plan.id) ?? 0
-    const sellCount = sellMap.get(plan.id) ?? 0
+    const sellInfo = sellMap.get(plan.id) ?? { count: 0, qty: 0 }
     const ta = tickerMap.get(plan.id)
     const totalSpent = ta?.total_spent ?? 0
     const totalBuyQty = ta?.total_buy_qty ?? 0
     const remainingAmount = Math.max(0, plan.totalAmount - totalSpent)
     const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
     const targetSellPrice = planAvgCost != null ? planAvgCost * (1 + plan.targetReturn) : null
-    const firstSellCompleted = completedDays > plan.splits / 2 && sellCount >= 1
-    return { ...plan, completedDays, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted }
+    const firstSellCompleted = completedDays > plan.splits / 2 && sellInfo.count >= 1
+    const holdingQty = Math.max(0, totalBuyQty - sellInfo.qty)
+    return { ...plan, completedDays, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted, holdingQty }
   })
 }
 
@@ -184,6 +190,17 @@ export async function completePlan(id: string): Promise<void> {
   })
 }
 
+export async function getTodayBoughtPlanIds(planIds: string[], date: string): Promise<string[]> {
+  if (planIds.length === 0) return []
+  const placeholders = planIds.map(() => '?').join(',')
+  const { rows } = await getDb().execute({
+    sql: `SELECT DISTINCT plan_id FROM transactions
+          WHERE date = ? AND type = 'buy' AND plan_id IN (${placeholders})`,
+    args: [date, ...planIds],
+  })
+  return (rows as unknown as { plan_id: string }[]).map((r) => r.plan_id)
+}
+
 export async function isDuplicateDate(planId: string, date: string): Promise<boolean> {
   const { rows } = await getDb().execute({
     sql: `SELECT 1 FROM transactions WHERE plan_id = ? AND date = ? AND type = 'buy' LIMIT 1`,
@@ -220,31 +237,6 @@ export async function recordDailyEntry(planId: string, data: DailyEntryData): Pr
   }
 }
 
-// Pure function — call with current price to determine sell signal
-export function computeSellSignal(
-  plan: Pick<
-    PlanWithProgress,
-    'completedDays' | 'splits' | 'targetReturn' | 'planAvgCost' | 'firstSellCompleted'
-  >,
-  currentPrice: number
-): 'full' | 'first' | 'second' | null {
-  if (plan.planAvgCost == null) return null
-
-  const round2 = (n: number) => Math.round(n * 100) / 100
-  const halfN = plan.splits / 2
-  const targetThreshold = round2(plan.planAvgCost * (1 + plan.targetReturn))
-  const firstThreshold = round2(plan.planAvgCost * 1.05)
-
-  if (plan.completedDays <= halfN) {
-    return currentPrice >= targetThreshold ? 'full' : null
-  } else {
-    if (!plan.firstSellCompleted) {
-      return currentPrice >= firstThreshold ? 'first' : null
-    } else {
-      return currentPrice >= targetThreshold ? 'second' : null
-    }
-  }
-}
 
 export interface SellData {
   date: string
@@ -256,6 +248,7 @@ export interface SellData {
 export async function recordSell(planId: string, data: SellData): Promise<void> {
   const plan = await getPlanById(planId)
   if (!plan || plan.status !== 'active') throw new Error('Plan not found or not active')
+  if (data.quantity > plan.holdingQty) throw new Error('매도 수량이 보유 수량을 초과합니다.')
 
   await createTransaction({
     tickerId: plan.tickerId,

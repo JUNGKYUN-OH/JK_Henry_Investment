@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { recordDailyEntry, isDuplicateDate } from '@/services/plan'
+import { recordDailyEntry } from '@/services/plan'
 
 export interface BuyResult {
   error?: string
@@ -26,10 +26,6 @@ export async function recordBuyAction(
   if (isNaN(quantity) || quantity <= 0) return { error: '수량을 입력하세요.' }
   if (isNaN(price) || price <= 0) return { error: '매수가를 입력하세요.' }
   if (isNaN(fee) || fee < 0) return { error: '수수료는 0 이상이어야 합니다.' }
-
-  if (await isDuplicateDate(planId, date)) {
-    return { error: '해당 날짜에 이미 매수 기록이 있습니다.' }
-  }
 
   try {
     await recordDailyEntry(planId, { date, quantity, price, fee })

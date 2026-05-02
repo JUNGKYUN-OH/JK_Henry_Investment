@@ -11,12 +11,12 @@ interface Props {
   planId: string
   tickerId: string
   dailyAmount: number
-  today: string
   cachedPrice: number | null
   action: typeof recordBuyAction
 }
 
-export function BuyConfirmForm({ planId, tickerId, dailyAmount, today, cachedPrice, action }: Props) {
+export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, action }: Props) {
+  const today = new Date().toLocaleDateString('en-CA')
   const boundAction = action.bind(null, planId)
   const [state, formAction, isPending] = useActionState(boundAction, {})
 

@@ -2,7 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getPlanById, computeSellSignal } from '@/services/plan'
+import { getPlanById } from '@/services/plan'
+import { computeSellSignal } from '@/lib/sellSignal'
 import { getCachedPrices } from '@/services/price'
 import { SellConfirmForm } from '@/components/plans/SellConfirmForm'
 import { recordSellAction } from './actions'
@@ -20,8 +21,6 @@ export default async function SellPage({ params }: { params: Promise<{ id: strin
   const sellSignal = cachedPrice != null ? computeSellSignal(plan, cachedPrice) : null
   if (!sellSignal) notFound()
 
-  const today = new Date().toISOString().slice(0, 10)
-
   return (
     <div className="p-4 max-w-lg mx-auto">
       <div className="mb-6">
@@ -38,7 +37,6 @@ export default async function SellPage({ params }: { params: Promise<{ id: strin
         holdingQty={plan.holdingQty}
         planAvgCost={plan.planAvgCost}
         sellSignal={sellSignal}
-        today={today}
         cachedPrice={cachedPrice}
         action={recordSellAction}
       />

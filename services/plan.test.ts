@@ -230,4 +230,15 @@ describe('recordSell', () => {
     const updated = (await getPlanById(plan.id))!
     expect(updated.status).toBe('completed')
   })
+
+  it('oversell → throws error, plan unchanged', async () => {
+    const plan = await createPlan('AAPL', 4000)
+    await recordDailyEntry(plan.id, { date: '2024-01-01', quantity: 10, price: 100, fee: 0 })
+    await expect(
+      recordSell(plan.id, { date: '2024-01-15', quantity: 11, price: 110, fee: 0 })
+    ).rejects.toThrow('매도 수량이 보유 수량을 초과합니다.')
+    const unchanged = (await getPlanById(plan.id))!
+    expect(unchanged.status).toBe('active')
+    expect(unchanged.holdingQty).toBe(10)
+  })
 })

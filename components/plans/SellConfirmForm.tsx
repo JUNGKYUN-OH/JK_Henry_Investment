@@ -13,7 +13,6 @@ interface Props {
   holdingQty: number
   planAvgCost: number
   sellSignal: 'full' | 'first' | 'second'
-  today: string
   cachedPrice: number | null
   action: typeof recordSellAction
 }
@@ -30,8 +29,9 @@ function buttonLabel(signal: 'full' | 'first' | 'second'): string {
 }
 
 export function SellConfirmForm({
-  planId, tickerId, holdingQty, planAvgCost, sellSignal, today, cachedPrice, action
+  planId, tickerId, holdingQty, planAvgCost, sellSignal, cachedPrice, action
 }: Props) {
+  const today = new Date().toLocaleDateString('en-CA')
   const boundAction = action.bind(null, planId)
   const [state, formAction, isPending] = useActionState(boundAction, {})
 

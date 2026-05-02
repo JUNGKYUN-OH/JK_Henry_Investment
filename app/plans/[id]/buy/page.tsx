@@ -15,8 +15,6 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
   const cachedPricesMap = await getCachedPrices()
   const cachedPrice = cachedPricesMap.get(plan.tickerId)?.price ?? null
 
-  const today = new Date().toISOString().slice(0, 10)
-
   return (
     <div className="p-4 max-w-lg mx-auto">
       <div className="mb-6">
@@ -31,7 +29,6 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
         planId={plan.id}
         tickerId={plan.tickerId}
         dailyAmount={plan.dailyAmount}
-        today={today}
         cachedPrice={cachedPrice}
         action={recordBuyAction}
       />
