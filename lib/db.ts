@@ -55,6 +55,8 @@ export async function initSchema(db: DbClient): Promise<void> {
         ticker_id TEXT NOT NULL REFERENCES tickers(id),
         total_amount REAL NOT NULL CHECK (total_amount > 0),
         daily_amount REAL NOT NULL CHECK (daily_amount > 0),
+        splits INTEGER NOT NULL DEFAULT 40,
+        target_return REAL NOT NULL DEFAULT 0.10,
         status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')),
         start_date TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))

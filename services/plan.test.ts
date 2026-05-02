@@ -9,6 +9,8 @@ import {
   getActivePlanByTicker,
   recordDailyEntry,
   isDuplicateDate,
+  computeSellSignal,
+  recordSell,
 } from './plan'
 
 beforeEach(async () => {
@@ -20,12 +22,21 @@ beforeEach(async () => {
 })
 
 describe('createPlan', () => {
-  it('creates a plan with dailyAmount = totalAmount / 40', async () => {
+  it('creates a plan with dailyAmount = totalAmount / 40 (default splits)', async () => {
     const plan = await createPlan('AAPL', 4000)
     expect(plan.tickerId).toBe('AAPL')
     expect(plan.totalAmount).toBe(4000)
     expect(plan.dailyAmount).toBe(100)
+    expect(plan.splits).toBe(40)
+    expect(plan.targetReturn).toBeCloseTo(0.1)
     expect(plan.status).toBe('active')
+  })
+
+  it('creates a plan with custom splits and targetReturn', async () => {
+    const plan = await createPlan('AAPL', 2000, 20, 0.15)
+    expect(plan.dailyAmount).toBe(100)
+    expect(plan.splits).toBe(20)
+    expect(plan.targetReturn).toBeCloseTo(0.15)
   })
 
   it('returns the plan with progress fields', async () => {
@@ -34,9 +45,11 @@ describe('createPlan', () => {
     expect(plan.remainingAmount).toBe(4000)
     expect(plan.planAvgCost).toBeNull()
     expect(plan.targetSellPrice).toBeNull()
+    expect(plan.splits).toBe(40)
+    expect(plan.targetReturn).toBeCloseTo(0.1)
   })
 
-  it('rejects duplicate active plan for same ticker (S11)', async () => {
+  it('rejects duplicate active plan for same ticker', async () => {
     await createPlan('AAPL', 4000)
     await expect(createPlan('AAPL', 2000)).rejects.toThrow()
   })
@@ -61,10 +74,16 @@ describe('recordDailyEntry', () => {
     await recordDailyEntry(plan.id, { date: '2024-01-02', quantity: 10, price: 120, fee: 0 })
     const updated = (await getPlanById(plan.id))!
     expect(updated.planAvgCost).toBeCloseTo(110, 5)
-    expect(updated.targetSellPrice).toBeCloseTo(121, 5)
   })
 
-  it('remainingAmount reflects actual spend, not target days (C2 fix)', async () => {
+  it('targetSellPrice uses plan targetReturn (not hardcoded 10%)', async () => {
+    const plan = await createPlan('AAPL', 2000, 20, 0.15)
+    await recordDailyEntry(plan.id, { date: '2024-01-01', quantity: 10, price: 100, fee: 0 })
+    const updated = (await getPlanById(plan.id))!
+    expect(updated.targetSellPrice).toBeCloseTo(115, 5)
+  })
+
+  it('remainingAmount reflects actual spend', async () => {
     const plan = await createPlan('AAPL', 4000)
     await recordDailyEntry(plan.id, { date: '2024-01-01', quantity: 10, price: 9.5, fee: 0 })
     const updated = (await getPlanById(plan.id))!
@@ -79,15 +98,15 @@ describe('recordDailyEntry', () => {
     ).rejects.toThrow()
   })
 
-  it('auto-completes plan at 40 days (S14)', async () => {
-    const plan = await createPlan('AAPL', 4000)
-    for (let i = 0; i < 40; i++) {
-      const date = `2024-${String(Math.floor(i / 28) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`
+  it('auto-completes plan at splits days', async () => {
+    const plan = await createPlan('AAPL', 2000, 5, 0.1)
+    for (let i = 0; i < 5; i++) {
+      const date = `2024-01-${String(i + 1).padStart(2, '0')}`
       await recordDailyEntry(plan.id, { date, quantity: 1, price: 100, fee: 0 })
     }
     const completed = (await getPlanById(plan.id))!
     expect(completed.status).toBe('completed')
-    expect(completed.completedDays).toBe(40)
+    expect(completed.completedDays).toBe(5)
   })
 })
 
@@ -111,6 +130,7 @@ describe('getAllPlans', () => {
     const plans = await getAllPlans()
     expect(plans).toHaveLength(2)
     expect(plans.every((p) => 'completedDays' in p)).toBe(true)
+    expect(plans.every((p) => 'splits' in p)).toBe(true)
   })
 })
 
@@ -124,5 +144,90 @@ describe('getActivePlanByTicker', () => {
 
   it('returns null when no active plan', async () => {
     expect(await getActivePlanByTicker('MSFT')).toBeNull()
+  })
+})
+
+describe('computeSellSignal', () => {
+  const base = {
+    completedDays: 15,
+    splits: 40,
+    targetReturn: 0.1,
+    planAvgCost: 100,
+    firstSellCompleted: false,
+  }
+
+  it('returns null when no planAvgCost', () => {
+    expect(computeSellSignal({ ...base, planAvgCost: null }, 120)).toBeNull()
+  })
+
+  it('completedDays <= N/2, price >= avgCost*(1+targetReturn) → full', () => {
+    expect(computeSellSignal({ ...base, completedDays: 15 }, 110)).toBe('full')
+  })
+
+  it('completedDays <= N/2, price < avgCost*(1+targetReturn) → null', () => {
+    expect(computeSellSignal({ ...base, completedDays: 15 }, 109)).toBeNull()
+  })
+
+  it('completedDays > N/2, no first sell, price >= avgCost*1.05 → first', () => {
+    expect(computeSellSignal({ ...base, completedDays: 25, firstSellCompleted: false }, 105)).toBe('first')
+  })
+
+  it('completedDays > N/2, no first sell, price < avgCost*1.05 → null', () => {
+    expect(computeSellSignal({ ...base, completedDays: 25, firstSellCompleted: false }, 104)).toBeNull()
+  })
+
+  it('completedDays > N/2, first sell done, price >= avgCost*(1+targetReturn) → second', () => {
+    expect(computeSellSignal({ ...base, completedDays: 25, firstSellCompleted: true }, 110)).toBe('second')
+  })
+
+  it('completedDays > N/2, first sell done, price < target → null', () => {
+    expect(computeSellSignal({ ...base, completedDays: 25, firstSellCompleted: true }, 109)).toBeNull()
+  })
+})
+
+describe('recordSell', () => {
+  it('full sell → plan status completed', async () => {
+    const plan = await createPlan('AAPL', 4000)
+    await recordDailyEntry(plan.id, { date: '2024-01-01', quantity: 10, price: 100, fee: 0 })
+    await recordSell(plan.id, { date: '2024-01-15', quantity: 10, price: 110, fee: 0 })
+    const updated = (await getPlanById(plan.id))!
+    expect(updated.status).toBe('completed')
+  })
+
+  it('first sell (partial) → plan stays active, firstSellCompleted true', async () => {
+    const plan = await createPlan('AAPL', 4000)
+    for (let i = 0; i < 25; i++) {
+      const date = `2024-${String(Math.floor(i / 28) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`
+      await recordDailyEntry(plan.id, { date, quantity: 1, price: 100, fee: 0 })
+    }
+    // 1st sell: 50% of holdings
+    await recordSell(plan.id, { date: '2024-02-28', quantity: 12, price: 105, fee: 0 })
+    const updated = (await getPlanById(plan.id))!
+    expect(updated.status).toBe('active')
+    expect(updated.firstSellCompleted).toBe(true)
+  })
+
+  it('after first sell, recordDailyEntry still succeeds', async () => {
+    const plan = await createPlan('AAPL', 4000)
+    for (let i = 0; i < 25; i++) {
+      const date = `2024-${String(Math.floor(i / 28) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`
+      await recordDailyEntry(plan.id, { date, quantity: 1, price: 100, fee: 0 })
+    }
+    await recordSell(plan.id, { date: '2024-02-28', quantity: 12, price: 105, fee: 0 })
+    await expect(
+      recordDailyEntry(plan.id, { date: '2024-03-01', quantity: 1, price: 100, fee: 0 })
+    ).resolves.not.toThrow()
+  })
+
+  it('second sell → plan status completed', async () => {
+    const plan = await createPlan('AAPL', 4000)
+    for (let i = 0; i < 25; i++) {
+      const date = `2024-${String(Math.floor(i / 28) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`
+      await recordDailyEntry(plan.id, { date, quantity: 1, price: 100, fee: 0 })
+    }
+    await recordSell(plan.id, { date: '2024-02-28', quantity: 12, price: 105, fee: 0 })
+    await recordSell(plan.id, { date: '2024-03-15', quantity: 13, price: 110, fee: 0 })
+    const updated = (await getPlanById(plan.id))!
+    expect(updated.status).toBe('completed')
   })
 })

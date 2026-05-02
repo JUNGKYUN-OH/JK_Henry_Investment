@@ -20,6 +20,8 @@ export interface Plan {
   tickerId: string
   totalAmount: number
   dailyAmount: number
+  splits: number
+  targetReturn: number
   status: 'active' | 'completed'
   startDate: string
   createdAt: string
@@ -63,6 +65,8 @@ export interface PlanWithProgress {
   tickerId: string
   totalAmount: number
   dailyAmount: number
+  splits: number
+  targetReturn: number
   status: 'active' | 'completed'
   startDate: string
   createdAt: string
@@ -70,4 +74,5 @@ export interface PlanWithProgress {
   remainingAmount: number
   planAvgCost: number | null
   targetSellPrice: number | null
+  firstSellCompleted: boolean
 }
