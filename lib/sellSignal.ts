@@ -1,3 +1,30 @@
+export type SellType = 'full' | 'first' | 'second'
+
+/** splits/2 기준으로 어떤 매도 단계인지 반환 (가격 무관) */
+export function computeSellType(plan: {
+  completedDays: number
+  splits: number
+  firstSellCompleted: boolean
+}): SellType {
+  if (plan.completedDays <= plan.splits / 2) return 'full'
+  if (!plan.firstSellCompleted) return 'first'
+  return 'second'
+}
+
+/** 해당 매도 단계의 목표가 반환 */
+export function computeSellTargetPrice(plan: {
+  planAvgCost: number
+  targetReturn: number
+  completedDays: number
+  splits: number
+  firstSellCompleted: boolean
+}): number {
+  const type = computeSellType(plan)
+  if (type === 'first') return plan.planAvgCost * 1.05
+  return plan.planAvgCost * (1 + plan.targetReturn)
+}
+
+/** @deprecated 가격 임계값 도달 시에만 신호 반환 — SellConfirmForm에서 신호 라벨 용도로만 사용 */
 export function computeSellSignal(
   plan: {
     completedDays: number
@@ -7,7 +34,7 @@ export function computeSellSignal(
     firstSellCompleted: boolean
   },
   currentPrice: number
-): 'full' | 'first' | 'second' | null {
+): SellType | null {
   if (plan.planAvgCost == null) return null
 
   const round2 = (n: number) => Math.round(n * 100) / 100

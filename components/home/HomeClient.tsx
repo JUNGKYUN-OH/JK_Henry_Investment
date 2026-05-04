@@ -7,7 +7,7 @@ import { AlertCircle } from 'lucide-react'
 import { SellBanner } from './SellBanner'
 import { TodayTaskList } from './TodayTaskList'
 import { PlanList } from '@/components/plans/PlanList'
-import { computeSellSignal } from '@/lib/sellSignal'
+import { computeSellType } from '@/lib/sellSignal'
 import type { PlanWithProgress } from '@/types'
 
 type PriceMap = Record<string, { price: number; fetchedAt: string }>
@@ -61,7 +61,7 @@ export function HomeClient({ initialData }: { initialData: HomeData }) {
   const sellablePlans = activePlans.filter((p) => !todaySellSkippedPlanIds.includes(p.id))
   const hasSellSignals = !loading && sellablePlans.some((plan) => {
     const priceInfo = prices[plan.tickerId]
-    return priceInfo != null && plan.planAvgCost != null && computeSellSignal(plan, priceInfo.price) !== null
+    return priceInfo != null && plan.planAvgCost != null && plan.holdingQty > 0
   })
 
   return (
