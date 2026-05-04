@@ -3,10 +3,11 @@ export const dynamic = 'force-dynamic'
 import { getAllPlans, getTodayBoughtPlanIds, getTodaySellSkippedPlanIds } from '@/services/plan'
 import { getCachedPrices } from '@/services/price'
 import { isTradingDay } from '@/lib/tradingDay'
+import { getTodayET } from '@/lib/timezone'
 import { HomeClient } from '@/components/home/HomeClient'
 
 export default async function HomePage() {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = getTodayET()
 
   const [allPlans, cachedPricesMap] = await Promise.all([
     getAllPlans(),

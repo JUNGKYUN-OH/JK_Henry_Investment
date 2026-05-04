@@ -39,7 +39,7 @@ function buttonLabel(signal: 'full' | 'first' | 'second'): string {
 export function SellConfirmForm({
   planId, tickerId, holdingQty, planAvgCost, feeRate, sellSignal, cachedPrice, action, skipAction
 }: Props) {
-  const today = new Date().toLocaleDateString('en-CA')
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date())
   const boundAction = action.bind(null, planId)
   const boundSkipAction = skipAction.bind(null, planId)
   const [state, formAction, isPending] = useActionState(boundAction, {})
@@ -70,6 +70,7 @@ export function SellConfirmForm({
           {cachedPrice != null && (
             <p className="text-xs text-muted-foreground mt-0.5">참고 가격 {formatUSD(cachedPrice)}</p>
           )}
+          <p className="text-xs text-muted-foreground mt-0.5">거래일 {today} (미국 동부시간)</p>
         </div>
 
         <p className="text-sm font-medium text-center">After 지정가 주문이 체결됐나요?</p>
@@ -95,6 +96,7 @@ export function SellConfirmForm({
           보유 수량 {Math.round(holdingQty)}주 · 평균단가 {formatUSD(planAvgCost)}
           {feeRate > 0 && ` · 수수료율 ${formatPct(feeRate * 100)}`}
         </p>
+        <p className="text-xs text-muted-foreground mt-0.5">거래일 {today} (미국 동부시간)</p>
       </div>
 
       {state.error && (

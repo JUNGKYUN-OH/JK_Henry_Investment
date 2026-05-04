@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { recordSell, getPlanById, recordSkip } from '@/services/plan'
+import { getTodayET } from '@/lib/timezone'
 
 export interface SellResult {
   error?: string
@@ -40,7 +41,7 @@ export async function recordSellAction(
 }
 
 export async function skipSellAction(planId: string, _formData: FormData): Promise<void> {
-  const date = new Date().toLocaleDateString('en-CA')
+  const date = getTodayET()
   await recordSkip(planId, date, 'sell')
   revalidatePath('/')
   redirect('/')

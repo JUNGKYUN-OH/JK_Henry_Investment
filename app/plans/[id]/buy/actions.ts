@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { recordDailyEntry, recordSkip } from '@/services/plan'
+import { getTodayET } from '@/lib/timezone'
 
 export interface BuyResult {
   error?: string
@@ -38,7 +39,7 @@ export async function recordBuyAction(
 }
 
 export async function skipBuyAction(planId: string, _formData: FormData): Promise<void> {
-  const date = new Date().toLocaleDateString('en-CA')
+  const date = getTodayET()
   await recordSkip(planId, date, 'buy')
   revalidatePath('/')
   redirect('/')

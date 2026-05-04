@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, action, skipAction }: Props) {
-  const today = new Date().toLocaleDateString('en-CA')
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date())
   const boundAction = action.bind(null, planId)
   const boundSkipAction = skipAction.bind(null, planId)
   const [state, formAction, isPending] = useActionState(boundAction, {})
@@ -40,6 +40,7 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
           {cachedPrice != null && (
             <p className="text-xs text-muted-foreground mt-0.5">참고 가격 {formatUSD(cachedPrice)}</p>
           )}
+          <p className="text-xs text-muted-foreground mt-0.5">거래일 {today} (미국 동부시간)</p>
         </div>
 
         <p className="text-sm font-medium text-center">오늘 LOC 주문이 체결됐나요?</p>
@@ -62,6 +63,7 @@ export function BuyConfirmForm({ planId, tickerId, dailyAmount, cachedPrice, act
         <p className="text-xs text-muted-foreground mb-0.5">종목</p>
         <p className="text-lg font-semibold">{tickerId}</p>
         <p className="text-xs text-muted-foreground mt-1">회당 투자금 {formatUSD(dailyAmount)}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">거래일 {today} (미국 동부시간)</p>
       </div>
 
       {state.error && (
