@@ -94,9 +94,14 @@ export function TodayTaskList({
                     <span className="text-xs text-muted-foreground tabular-nums">
                       {formatUSD(currentPrice)}
                     </span>
+                    {plan.planAvgCost != null && (
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        · LOC {formatUSD(plan.planAvgCost * 1.05)}
+                      </span>
+                    )}
                     {targetPct != null && (
                       <span className="text-xs text-muted-foreground">
-                        목표까지 {targetPct >= 0 ? '+' : ''}{targetPct.toFixed(1)}%
+                        · 목표까지 {targetPct >= 0 ? '+' : ''}{targetPct.toFixed(1)}%
                       </span>
                     )}
                   </>
