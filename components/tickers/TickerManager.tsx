@@ -25,6 +25,19 @@ interface Props {
   deleteAction: (id: string) => Promise<ActionResult>
 }
 
+const EXCHANGE_LABELS: Record<string, string> = {
+  PCX: 'NYSE Arca',
+  NGM: 'NASDAQ',
+  NMS: 'NASDAQ',
+  NYQ: 'NYSE',
+  BTS: 'NYSE MKT',
+  PNK: 'OTC',
+}
+
+function exchangeLabel(code: string): string {
+  return EXCHANGE_LABELS[code] ?? code
+}
+
 export function TickerManager({ tickers, addAction, deleteAction }: Props) {
   const [addState, addFormAction, addPending] = useActionState(addAction, {})
   const [inputValue, setInputValue] = useState('')
@@ -107,7 +120,7 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
                       {ticker.id}
                     </a>
                     {ticker.exchange && (
-                      <span className="text-xs text-muted-foreground">{ticker.exchange}</span>
+                      <span className="text-xs text-muted-foreground">{exchangeLabel(ticker.exchange)}</span>
                     )}
                   </div>
                   {ticker.name && (
