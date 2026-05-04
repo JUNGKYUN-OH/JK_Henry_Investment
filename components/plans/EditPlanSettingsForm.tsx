@@ -4,6 +4,7 @@ import { useTransition, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Pencil } from 'lucide-react'
 import type { updatePlanSettingsAction } from '@/app/plans/[id]/actions'
 
 interface Props {
@@ -20,12 +21,10 @@ export function EditPlanSettingsForm({ planId, totalAmount, feeRate, action }: P
 
   if (!isEditing) {
     return (
-      <button
-        onClick={() => setIsEditing(true)}
-        className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-      >
+      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+        <Pencil className="size-3.5" />
         설정 편집
-      </button>
+      </Button>
     )
   }
 
