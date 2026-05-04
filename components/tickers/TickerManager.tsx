@@ -97,7 +97,15 @@ export function TickerManager({ tickers, addAction, deleteAction }: Props) {
               <li key={ticker.id} className="flex items-start justify-between px-4 py-3 gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-medium">{ticker.id}</span>
+                    <a
+                      href={`https://finance.yahoo.com/quote/${ticker.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-sm font-medium hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {ticker.id}
+                    </a>
                     {ticker.exchange && (
                       <span className="text-xs text-muted-foreground">{ticker.exchange}</span>
                     )}
