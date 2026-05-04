@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { recordDailyEntry, isDuplicateDate, deletePlan } from '@/services/plan'
+import { recordDailyEntry, isDuplicateDate, deletePlan, updatePlanSettings } from '@/services/plan'
 
 export interface EntryResult {
   error?: string
@@ -46,4 +46,32 @@ export async function deletePlanAction(planId: string): Promise<void> {
   await deletePlan(planId)
   revalidatePath('/plans')
   redirect('/plans')
+}
+
+export interface UpdateSettingsResult {
+  error?: string
+}
+
+export async function updatePlanSettingsAction(
+  planId: string,
+  _prevState: UpdateSettingsResult,
+  formData: FormData
+): Promise<UpdateSettingsResult> {
+  const totalAmountRaw = formData.get('totalAmount') as string | null
+  const feeRateRaw = formData.get('feeRate') as string | null
+
+  const totalAmount = totalAmountRaw ? parseFloat(totalAmountRaw) : NaN
+  const feeRate = feeRateRaw ? parseFloat(feeRateRaw) / 100 : NaN
+
+  if (isNaN(totalAmount) || totalAmount <= 0) return { error: '총 투자금을 입력하세요.' }
+  if (isNaN(feeRate) || feeRate < 0) return { error: '수수료율은 0 이상이어야 합니다.' }
+
+  try {
+    await updatePlanSettings(planId, { totalAmount, feeRate })
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : '저장 실패' }
+  }
+
+  revalidatePath(`/plans/${planId}`)
+  return {}
 }

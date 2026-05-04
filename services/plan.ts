@@ -203,6 +203,20 @@ export async function createPlan(
   return (await getPlanById(id))! as Plan
 }
 
+export async function updatePlanSettings(
+  id: string,
+  { totalAmount, feeRate }: { totalAmount: number; feeRate: number }
+): Promise<void> {
+  const db = getDb()
+  const { rows } = await db.execute({ sql: `SELECT splits FROM plans WHERE id = ?`, args: [id] })
+  const splits = Number((rows[0] as unknown as { splits: number }).splits) || 40
+  const dailyAmount = totalAmount / splits
+  await db.execute({
+    sql: `UPDATE plans SET total_amount = ?, daily_amount = ?, fee_rate = ? WHERE id = ? AND status = 'active'`,
+    args: [totalAmount, dailyAmount, feeRate, id],
+  })
+}
+
 export async function completePlan(id: string): Promise<void> {
   const today = new Date().toISOString().slice(0, 10)
   await getDb().execute({

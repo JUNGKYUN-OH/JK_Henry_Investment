@@ -2,14 +2,17 @@ import { Badge } from '@/components/ui/badge'
 import type { PlanWithProgress } from '@/types'
 import { formatUSD } from '@/lib/format'
 import { DeletePlanButton } from './DeletePlanButton'
+import { EditPlanSettingsForm } from './EditPlanSettingsForm'
+import type { updatePlanSettingsAction } from '@/app/plans/[id]/actions'
 
 interface Props {
   plan: PlanWithProgress
   totalFee?: number
   deleteAction?: () => Promise<void>
+  editAction?: typeof updatePlanSettingsAction
 }
 
-export function PlanDetail({ plan, totalFee, deleteAction }: Props) {
+export function PlanDetail({ plan, totalFee, deleteAction, editAction }: Props) {
   const usedAmount = plan.totalAmount - plan.remainingAmount
   const completedSplits = plan.completedSplits
   const pct = Math.min(100, (usedAmount / plan.totalAmount) * 100)
@@ -133,6 +136,17 @@ export function PlanDetail({ plan, totalFee, deleteAction }: Props) {
               </div>
             </>
           )}
+        </section>
+      )}
+
+      {isActive && editAction && (
+        <section className="pt-2">
+          <EditPlanSettingsForm
+            planId={plan.id}
+            totalAmount={plan.totalAmount}
+            feeRate={plan.feeRate}
+            action={editAction}
+          />
         </section>
       )}
 
