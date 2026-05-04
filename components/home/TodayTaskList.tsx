@@ -95,7 +95,7 @@ export function TodayTaskList({
                       {formatUSD(currentPrice)}
                     </span>
                     {plan.planAvgCost != null && (
-                      <span className="text-xs text-muted-foreground tabular-nums">
+                      <span className="text-xs text-green-600 font-medium tabular-nums">
                         · LOC {formatUSD(plan.planAvgCost * 1.05)}
                       </span>
                     )}
