@@ -75,6 +75,7 @@ export interface PlanWithProgress {
   completedAt: string | null
   createdAt: string
   completedDays: number
+  completedSplits: number
   remainingAmount: number
   planAvgCost: number | null
   targetSellPrice: number | null

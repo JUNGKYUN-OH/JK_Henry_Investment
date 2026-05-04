@@ -11,13 +11,13 @@ interface Props {
 
 export function PlanDetail({ plan, totalFee, deleteAction }: Props) {
   const usedAmount = plan.totalAmount - plan.remainingAmount
-  const completedSplits = plan.dailyAmount > 0 ? Math.round(usedAmount / plan.dailyAmount) : 0
+  const completedSplits = plan.completedSplits
   const pct = Math.min(100, (usedAmount / plan.totalAmount) * 100)
   const isActive = plan.status === 'active'
   const halfN = plan.splits / 2
 
   const firstSellPrice =
-    plan.planAvgCost != null && plan.completedDays > halfN
+    plan.planAvgCost != null && completedSplits > halfN
       ? plan.planAvgCost * 1.05
       : null
   const targetSellPrice = plan.targetSellPrice
@@ -103,7 +103,7 @@ export function PlanDetail({ plan, totalFee, deleteAction }: Props) {
       {plan.planAvgCost != null && (
         <section className="border rounded-lg p-4 space-y-2">
           <p className="text-xs font-medium text-muted-foreground mb-2">매도 목표</p>
-          {plan.completedDays <= halfN ? (
+          {completedSplits <= halfN ? (
             <div className="flex items-center justify-between text-sm">
               <span>목표가 (+{Math.round(plan.targetReturn * 100)}%)</span>
               <span className="font-semibold tabular-nums text-green-700">

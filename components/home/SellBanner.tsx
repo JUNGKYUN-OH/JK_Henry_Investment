@@ -25,7 +25,7 @@ export function SellBanner({ plans, prices }: Props) {
     const targetPrice = computeSellTargetPrice({
       planAvgCost: plan.planAvgCost,
       targetReturn: plan.targetReturn,
-      completedDays: plan.completedDays,
+      completedSplits: plan.completedSplits,
       splits: plan.splits,
       firstSellCompleted: plan.firstSellCompleted,
     })

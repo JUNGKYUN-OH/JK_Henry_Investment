@@ -72,12 +72,14 @@ async function calcPlanProgress(
   const sellProceeds = Number(sellRow.sell_proceeds)
   const sellFees = Number(sellRow.sell_fees)
   const holdingQty = Math.max(0, totalBuyQty - totalSellQty)
-  const firstSellCompleted = completedDays > splits / 2 && sellCount >= 1
+  const dailyAmount = totalAmount / splits
+  const completedSplits = dailyAmount > 0 ? Math.round(totalSpent / dailyAmount) : 0
+  const firstSellCompleted = completedSplits > splits / 2 && sellCount >= 1
   const realizedPnl = planAvgCost != null && totalSellQty > 0
     ? (sellProceeds - sellFees) - planAvgCost * totalSellQty
     : null
 
-  return { completedDays, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted, holdingQty, realizedPnl }
+  return { completedDays, completedSplits, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted, holdingQty, realizedPnl }
 }
 
 export async function getAllPlans(): Promise<PlanWithProgress[]> {
@@ -150,12 +152,13 @@ export async function getAllPlans(): Promise<PlanWithProgress[]> {
     const remainingAmount = Math.max(0, plan.totalAmount - totalSpent)
     const planAvgCost = totalBuyQty > 0 ? totalSpent / totalBuyQty : null
     const targetSellPrice = planAvgCost != null ? planAvgCost * (1 + plan.targetReturn) : null
-    const firstSellCompleted = completedDays > plan.splits / 2 && sellInfo.count >= 1
     const holdingQty = Math.max(0, totalBuyQty - sellInfo.qty)
+    const completedSplits = plan.dailyAmount > 0 ? Math.round(totalSpent / plan.dailyAmount) : 0
+    const firstSellCompleted = completedSplits > plan.splits / 2 && sellInfo.count >= 1
     const realizedPnl = planAvgCost != null && sellInfo.qty > 0
       ? (sellInfo.proceeds - sellInfo.fees) - planAvgCost * sellInfo.qty
       : null
-    return { ...plan, completedDays, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted, holdingQty, realizedPnl }
+    return { ...plan, completedDays, completedSplits, remainingAmount, planAvgCost, targetSellPrice, firstSellCompleted, holdingQty, realizedPnl }
   })
 }
 
