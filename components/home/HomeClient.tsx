@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
@@ -29,6 +30,20 @@ interface PriceResult {
 
 export function HomeClient({ initialData }: { initialData: HomeData }) {
   const { activePlans, cachedPrices, todayBoughtPlanIds, todaySellSkippedPlanIds, isTodayTradingDay } = initialData
+
+  const router = useRouter()
+
+  useEffect(() => {
+    function getETDate() {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date())
+    }
+    function checkDateChange() {
+      if (getETDate() !== initialData.today) router.refresh()
+    }
+    checkDateChange()
+    const id = setInterval(checkDateChange, 60_000)
+    return () => clearInterval(id)
+  }, [initialData.today, router])
 
   const [prices, setPrices] = useState<PriceMap>(cachedPrices)
   const [loading, setLoading] = useState(true)
